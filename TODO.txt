@@ -1,0 +1,115 @@
+www
+---
+[  ] - update FAQ section with A->B track limitations
+
+
+ptracker
+--------
+
+generic
+
+[  ] - update driver details: number of 1st, 2nd, 3rd for different session types
+[  ] - update driver details: number of collisions per km for different histories (1 week, 3 months, total)
+[  ] - lap time histogram in lap time view
+[  ] - lap times graph per lap in session details
+[  ] - position graph per lap in session player details
+[  ] - DRS usage time per lap?
+[  ] - session type filtering http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-144#post-739478
+
+for 3.3.x
+
+[  ] - port stracker interface
+
+stracker
+--------
+
+for 3.3.x
+
+[  ] - animated comparisons
+[  ] - Chrome problem with stracker-package reported by Kevin (?) -> not reproducable
+[  ] - better error messages for the most common problems (http_static directory not found, ...)
+[  ] - installation script
+[  ] - country flags ?
+[  ] - problem with cuts from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-139#post-711487
+[  ] - multiple lap comparisons from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-139#post-711486
+[  ] - autokick from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-143#post-732238
+
+ptracker
+--------
+
+for 3.2.x
+[2 ] - clicking on driver's name to kick/ban/whisper/broadcast
+[2 ] - change fuel display mode by clicking (laps remaining / liters needed)
+[2 ] - set focus car by click on driver's name
+[2 ] - change perspective for new getFocusCar() function (tbd)
+[T ] - draw disconnected players in gray color
+
+[2 ] - display validness respecting env and car collisions
+[2 ] - tyre filter for lap stats
+[T ] - race gap to leader instead relative
+[T ] - fastest lap gap only per qualify
+[T ] - display last lap instead of fastest lap
+[2 ] - correctly restore position of msg window even when at lower right
+[2 ] - when getting the "delta lap", query for quickest lap time with history info object
+
+[2 ] - usage of new getCarBallast() function
+[2 ] - use new functions isCarInPitlane / isCarInPit instead of broken shm stuff
+[2 ] - use new SHM values instead of parsing ini files where possible
+[2 ] - get rid of race_ini_file in main.py
+[2 ] - implement a configurable interval for live delta calculation
+[2 ] - chat filter
+
+[2 ] - replay mode
+[2 ] - fix timeouts for stracker replies
+
+[2 ] - fix race deltas -> SP: OK
+[2 ] - check replays
+
+backlog
+
+
+stracker
+--------
+
+for 3.2.x
+
+[2 ] - admining in live map (bigbawmcgraw)
+[2 ] - chat log in db
+[2 ] - http: session summary with cuts and accidents
+[2 ] - lap comparisons between any laps on same track
+[2 ] - fix lap comparisons with personal bests related to non-ptracker times
+[2 ] - ballast
+[2 ] - caching of server-packager data
+[2 ] - add /st kickban_guid command
+[2 ] - add /st kickban_id command
+[2 ] - configurable columns for lap time table
+[2 ] - include custom.css
+[2 ] - swear filter/autokick on chat
+[2 ] - configurable stracker messages for players without ptracker
+[2 ] - disable flattr stuff
+[2 ] - fix date bug reported by Jempy (?)
+[2 ] - fix problem with linux (?) servers providing lap histories
+[2 ] - fix problem with postgres (?) servers providing only 15 drivers
+[2 ] - fix (C)orvette html display bug
+[2 ] - confirm kick or ban in http
+[2 ] - configure navbar
+[2 ] - fix qualy leaderboard with invalid laps
+[2 ] - fix last qualy lap with ptracker info bug
+[2 ] - make templates editable
+[2 ] - player details broken: http://178.33.45.2:50055/playerdetails?pid=119#
+[2 ] - remove cherrypy dependency from http_server_base
+
+backlog
+
+database
+--------
+
+for 3.2.x 
+[2 ] - ballast to lap table
+[2 ] - check if splitting binary blobs from lap table helps to improve performance
+[2 ] - add chat history
+
+stp protocol
+------------
+[2 ] - add lap invalidations to server state transfers
+[2 ] - send admin password for players in group 'admins'

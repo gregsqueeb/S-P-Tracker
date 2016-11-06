@@ -1,0 +1,208 @@
+!include x64.nsh
+
+!define StrRep "!insertmacro StrRep"
+!macro StrRep output string old new
+    Push `${string}`
+    Push `${old}`
+    Push `${new}`
+    !ifdef __UNINSTALL__
+        Call un.StrRep
+    !else
+        Call StrRep
+    !endif
+    Pop ${output}
+!macroend
+ 
+!macro Func_StrRep un
+    Function ${un}StrRep
+        Exch $R2 ;new
+        Exch 1
+        Exch $R1 ;old
+        Exch 2
+        Exch $R0 ;string
+        Push $R3
+        Push $R4
+        Push $R5
+        Push $R6
+        Push $R7
+        Push $R8
+        Push $R9
+ 
+        StrCpy $R3 0
+        StrLen $R4 $R1
+        StrLen $R6 $R0
+        StrLen $R9 $R2
+        loop:
+            StrCpy $R5 $R0 $R4 $R3
+            StrCmp $R5 $R1 found
+            StrCmp $R3 $R6 done
+            IntOp $R3 $R3 + 1 ;move offset by 1 to check the next character
+            Goto loop
+        found:
+            StrCpy $R5 $R0 $R3
+            IntOp $R8 $R3 + $R4
+            StrCpy $R7 $R0 "" $R8
+            StrCpy $R0 $R5$R2$R7
+            StrLen $R6 $R0
+            IntOp $R3 $R3 + $R9 ;move offset by length of the replacement string
+            Goto loop
+        done:
+ 
+        Pop $R9
+        Pop $R8
+        Pop $R7
+        Pop $R6
+        Pop $R5
+        Pop $R4
+        Pop $R3
+        Push $R0
+        Push $R1
+        Pop $R0
+        Pop $R1
+        Pop $R0
+        Pop $R2
+        Exch $R1
+    FunctionEnd
+!macroend
+!insertmacro Func_StrRep ""
+!insertmacro Func_StrRep "un."
+
+Name "ptracker"
+OutFile "%(target)s"
+
+DirText "Choose the installation directory of Assetto Corsa!"
+ShowInstDetails show
+
+InstallDir "C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa"
+    
+Function .onInit
+    ; try to autodetect the location of the Assetto Corsa game path
+    ReadRegStr $0 HKCU Software\Valve\Steam SteamPath
+    StrCpy $1 "$0\SteamApps\common\assettocorsa"
+    IfFileExists $1\AssettoCorsa.exe instfound
+
+    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
+    StrCpy $1 "$0"
+    IfFileExists $1\AssettoCorsa.exe instfound
+
+    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
+    StrCpy $1 "$0"
+    IfFileExists $1\AssettoCorsa.exe instfound
+
+    StrCpy $1 "C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa"
+
+instfound:
+    ${StrRep} $2 $1 "/" "\"
+    StrCpy $INSTDIR $2
+FunctionEnd
+
+Function .onVerifyInstDir
+    ; check for sane installation directory
+    IfFileExists $INSTDIR\AssettoCorsa.exe PathGood
+        MessageBox MB_OK "Must be installed in Assetto Corsa game directory."
+        Abort "Must be installed in Assetto Corsa game directory."
+    PathGood:
+FunctionEnd
+
+Section "Installer Section"
+    SetOutPath $INSTDIR
+    
+    ; if ptracker already is installed, we remove it
+    IfFileExists $INSTDIR\apps\python\ptracker\*.* 0 uninst_complete
+        MessageBox MB_OKCANCEL "ptracker is already installed and will be removed." IDOK uninst IDCANCEL abort
+uninst:
+        IfFileExists $INSTDIR\apps\python\ptracker\ptracker.nsh.in devmode usermode
+devmode:
+        ; devmode: assume we have a link
+        ExecWait 'cmd /c rmdir "$INSTDIR\apps\python\ptracker"' ; for the development system, try to rmdir before recursive rm
+        IfErrors failrmdir goodrmdir
+failrmdir:
+            MessageBox MB_OK "Could not rmdir ptracker Stopping."
+            Abort "Could not rmdir ptracker Stopping."
+usermode:
+        ; usermode: recursive delete
+        RMDir /r $INSTDIR\apps\python\ptracker
+goodrmdir:
+        IfErrors uninst_complete ; ignore errors
+        Goto uninst_complete
+abort:
+        Abort "Old version needs to be removed before installation. Aborting."
+        
+uninst_complete:
+    ; following statements will be expanded by the release script
+    %(DirStatements)s
+    %(FileStatements)s
+        
+    DetailPrint "Check if ptracker.exe can be started..."
+    ExecWait '"$INSTDIR\apps\python\ptracker\dist\ptracker.exe" /check_install' $0
+    IfErrors exe_fail exe_good
+exe_fail:
+        MessageBox MB_OK "Could not execute ptracker.exe. Maybe your virus scanner is blocking it? Try to add an exception. Aborting."
+        Abort "Could not execute ptracker.exe. Maybe your virus scanner is blocking it? Try to add an exception. Aborting."
+exe_good:
+    IntCmp $0 7 ptok ptnok ptnok
+ptok:
+        goto instok
+ptnok:
+        MessageBox MB_OK "ptracker.exe had a problem and could not return seccessfully. Aborting."
+        Abort "ptracker.exe had a problem and could not return seccessfully. Aborting."
+instok:
+${If} ${RunningX64}
+    ; 64 bits
+    ; check if VS 2015 is installed
+    ReadRegDWORD $0 HKLM Software\Wow6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64 Installed
+    IfErrors vc2015nok
+    IntCmp $0 1 vc2015ok vc2015nok vc2015nok
+vc2015nok:
+    DetailPrint "VC Redist 2015 is not installed on this system."
+    MessageBox MB_YESNO "It seems you do not have the Microsoft Redistributables 2015 installed on your system. These are needed for setup sharing. Download and install them now?" IDYES inst2015 IDNO vc2015ok
+inst2015:
+    DetailPrint "Downloading VC Redist 2015"
+    NSISdl::download http://n-e-y-s.de/downloads/vcredist_2015/vc_redist.x64.exe vc_redist.x64.exe
+    IfErrors download_failed download_good
+download_failed:
+    MessageBox MB_OK "The download failed. You will not be able to share setups with ptracker. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
+    goto theend
+download_good:
+    ExecWait '"vc_redist.x64.exe"'
+    IfErrors exec_failed exec_good
+exec_failed:
+    MessageBox MB_OK "Cannot execute the downloaded installer for VS 2015 redistributables. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
+    goto theend
+exec_good:
+    goto theend
+vc2015ok:
+    DetailPrint "VC Redist 2015 installation skipped"
+${Else}
+    ; 32 bits
+    ; check if VS 2015 is installed
+    ReadRegDWORD $0 HKLM Software\Microsoft\VisualStudio\14.0\VC\Runtimes\x32 Installed
+    IfErrors vc2015nok32
+    IntCmp $0 1 vc2015ok32 vc2015nok32 vc2015nok32
+vc2015nok32:
+    DetailPrint "VC Redist 2015 is not installed on this system."
+    MessageBox MB_YESNO "It seems you do not have the Microsoft Redistributables 2015 installed on your system. These are needed for setup sharing. Download and install them now?" IDYES inst201532 IDNO vc2015ok32
+inst201532:
+    DetailPrint "Downloading VC Redist 2015"
+    NSISdl::download http://n-e-y-s.de/downloads/vcredist_2015/vc_redist.x32.exe vc_redist.x32.exe
+    IfErrors download_failed32 download_good32
+download_failed32:
+    MessageBox MB_OK "The download failed. You will not be able to share setups with ptracker. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
+    goto theend
+download_good32:
+    ExecWait '"vc_redist.x32.exe"'
+    IfErrors exec_failed32 exec_good32
+exec_failed32:
+    MessageBox MB_OK "Cannot execute the downloaded installer for VS 2015 redistributables. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
+    goto theend
+exec_good32:
+    goto theend
+vc2015ok32:
+    DetailPrint "VC Redist 2015 installation skipped"
+${EndIf}  
+
+theend:
+    MessageBox MB_OK "Successfully installed ptracker."
+    
+    
+SectionEnd

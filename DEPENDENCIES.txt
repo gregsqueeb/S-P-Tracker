@@ -1,0 +1,25 @@
+PACKAGE DEPENDENCIES
+--------------------
+
+1. Python Interpreter
+---------------------
+python - 3.3.0
+
+2. Python modules
+-----------------
+bottle - 0.12.7 [pip]
+cherrypy - 3.6.0 [pip]
+psycopg2 - 2.6.1 [(vpython33) C:\vpython33\Scripts>easy_install http://www.stickpeople.com/projects/python/win-psycopg/2.6.1/psycopg2-2.6.1.win32-py3.3-pg9.4.4-release.exe]
+py2exe - 0.9.2.0 [pip]
+dateutil - 2.5.1 [pip]
+wsgi-request-logger - 0.4.1
+simplejson 3.8.0
+
+3. DLL's
+--------
+sqlite3.dll - 3.8.6
+
+4. HTTP stuff
+-------------
+bootstrap 3.2.0
+jQuery v1.11.1
