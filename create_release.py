@@ -86,7 +86,9 @@ if not stracker_only and not linux_only:
     f.close()
 
     if not test_release_process:
-        svn_commit = subprocess.check_output([git, "commit", "-s", "-m", "prepare release %s" % version])
+        git_status = subprocess.check_output([git, "status", "-s", "-uno"], universal_newlines=True)
+        if not git_status.strip() == "":    
+            svn_commit = subprocess.check_output([git, "commit", "-s", "-m", "prepare release %s" % version])
 
     ptracker_py_files = """\
     ptracker.py
