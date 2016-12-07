@@ -161,6 +161,7 @@ class Config:
             'log_timestamps': (False, conf.getboolean, 'set to true, if you want the log messages to be prefixed with a timestamp'),
             'lower_priority': (True, conf.getboolean, 'set to true, if you want stracker to reduce its priority. Will use BELOW_NORMAL on windows and nice(5) on linux.'),
             'keep_alive_ptracker_conns': (True, conf.getboolean, 'set to false, if you want to disable the TCP keep_alive option (that was the behaviour pre 3.1.7).'),
+            'guids_based_on_driver_names': (False, conf.getboolean, 'you normally want to leave that at the default (False). Use case for this is an environment where the same steam account is used by different drivers.'),
         }
         self.sections['SWEAR_FILTER'] = {
             'warning': ('Please be polite and do not swear in the chat. You will be %(swear_action)s from the server after receiving %(num_warnings_left)d more warnings.', conf.get, 'message sent to player after a swear detection'),

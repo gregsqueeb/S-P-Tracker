@@ -28,6 +28,8 @@ import random
 import copy
 import os
 import platform
+import struct
+import hashlib
 from socketserver import ThreadingTCPServer,BaseRequestHandler
 from threading import Thread, Timer
 from stracker_lib import config
@@ -806,14 +808,17 @@ class ACMonitor:
         return {'lap_details':ref()}
 
     def setupDepositGet(self, **kw):
+        kw[guid] = dbGuidMapper.guid_new(kw[guid])
         ref = self.database.setupDepositGet(__sync=True, **kw)
         return ref()
 
     def setupDepositSave(self, **kw):
+        kw[guid] = dbGuidMapper.guid_new(kw[guid])
         self.database.setupDepositSave(__sync=True, **kw)()
         return {'ok': 1}
 
     def setupDepositRemove(self, **kw):
+        kw[guid] = dbGuidMapper.guid_new(kw[guid])
         self.database.setupDepositRemove(__sync=True, **kw)()
         return {'ok': 1}
 
@@ -862,7 +867,7 @@ class ACMonitor:
             session_state = self.currentSession.getSessionState()
         else:
             session_state = ACSession().getSessionState()
-        if for_guid in self.admin_guids and not self.adminpwd is None:
+        if dbGuidMapper.guid_new(for_guid) in self.admin_guids and not self.adminpwd is None:
             session_state['adminpwd'] = self.adminpwd
         return {'ptracker_instances':ptrackerInstances, 'session_state': session_state, 'messages':messages}
 
@@ -902,7 +907,7 @@ class ACMonitor:
                 acinfo("Ptracker message to %s: %s", guid, text)
             self.send_server_data(guid)
         else:
-            disabled = self.database.messagesDisabled(__sync=True, guid=guid, name=d.name)()
+            disabled = self.database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
             if messageToString(mtype) in self.chat_msg_types and (not disabled or mtype == MTYPE_WELCOME):
                 self.sendChatMessageToPlayer(guid, text)
                 if addToLog:
@@ -977,7 +982,7 @@ class ACMonitor:
                 raceFinished = not p.bestTimeACValid() is None
             if not quiet: acinfo("  Player %s (raceFinished=%s, finishTime=%s)", p.name, raceFinished, finishTime)
             positions.append({
-                'steamGuid':p.guid,
+                'steamGuid':dbGuidMapper.guid_new(p.guid),
                 'playerName':p.name,
                 'playerIsAI':0,
                 'raceFinished':raceFinished,
@@ -1028,7 +1033,7 @@ class ACMonitor:
             lapsBehind = self.currentSession.numLaps - d.lapCount()
             positions = self.calc_positions(quiet=True)
             for i,p in enumerate(positions):
-                if p['steamGuid'] != d.guid:
+                if p['steamGuid'] != dbGuidMapper.new_guid(d.guid):
                     continue
                 if i < 3 and lapsBehind == 0:
                     i2msg = {0:"has won the race!", 1:"has finished second!", 2:"has finished third!"}
@@ -1128,6 +1133,8 @@ class ACMonitor:
 
     @acquire_lock
     def newConnection(self, event):
+        if config.config.STRACKER_CONFIG.guids_based_on_driver_names:
+            dbGuidMapper.register_guid_mapping(event.driverGuid, event.driverName)
         d = ACDriver(event.driverGuid, self.saveLap)
         d.newConnectionEvent(event)
         d = self.allDrivers.addDriver(d)
@@ -1156,7 +1163,7 @@ class ACMonitor:
     @acquire_lock
     def updateOnline(self):
         ad = self.allDrivers.allActive()
-        self.database.setOnline(__sync=True, server_name=config.config.STRACKER_CONFIG.server_name, guids_online=[d.guid for d in ad])()
+        self.database.setOnline(__sync=True, server_name=config.config.STRACKER_CONFIG.server_name, guids_online=[dbGuidMapper.guid_new(d.guid) for d in ad])()
 
     @acquire_lock
     def sendWelcomeMsg(self, guid):
@@ -1174,7 +1181,7 @@ class ACMonitor:
                                      color=(1.0,0.5,0.5,1.0),
                                      mtype=MTYPE_WELCOME)
         if not d is None and d.ptracker_conn is None:
-            disabled = self.database.messagesDisabled(__sync=True, guid=guid, name=d.name)()
+            disabled = self.database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
             msgEnabled = "disabled" if disabled else "enabled"
             self.sendMessageToPlayer(guid=guid, text="Messages are %s. Use the commands '/st messages off' or '/st messages on' to change the behaviour." % msgEnabled,
                                      color=(1.0,1.0,1.0,1.0), mtype=MTYPE_WELCOME)
@@ -1217,7 +1224,7 @@ class ACMonitor:
                 positions = self.calc_positions(quiet=True)
                 np = []
                 for i, p in enumerate(positions):
-                    cd = self.allDrivers.byGuidActive(p['steamGuid'])
+                    cd = self.allDrivers.byGuidActive(dbGuidMapper.guid_orig(p['steamGuid']))
                     if not cd is None:
                         np.append(cd)
                 livemap.update_ranking(np)
@@ -1334,7 +1341,7 @@ class ACMonitor:
         dynamicAssists['trackTemp'] = self.currentSession.roadTemp
 
         self.database.registerLap(__sync=True, trackChecksum=driver.track_checksum, carChecksum=driver.car_checksum, acVersion=driver.getPTACVersion(),
-            steamGuid=driver.guid, playerName=driver.name, playerIsAI=0,
+            steamGuid=dbGuidMapper.guid_new(driver.guid), playerName=driver.name, playerIsAI=0,
             lapHistory=lh, tyre=lap.tyre, lapCount=lap.lapCount, sessionTime=driver.totalTime(),
             fuelRatio=lap.fuelRatio, valid=valid, carname=driver.car, staticAssists=lap.staticAssists,
             dynamicAssists=dynamicAssists, maxSpeed=lap.maxSpeed,
@@ -1352,7 +1359,7 @@ class ACMonitor:
             track=self.currentSession.trackname,
             artint=0,
             cars=[driver.car],
-            ego_guid=driver.guid,
+            ego_guid=dbGuidMapper.guid_new(driver.guid),
             valid=[1,2],
             minSessionStartTime=0)()
         dbRes_combo = self.database.lapStats(
@@ -1362,11 +1369,11 @@ class ACMonitor:
             track=self.currentSession.trackname,
             artint=0,
             cars=self.currentSession.cars,
-            ego_guid=driver.guid,
+            ego_guid=dbGuidMapper.guid_new(driver.guid),
             valid=[1,2],
             minSessionStartTime=0,
             group_by_guid=True)()
-        self.check_pb_sb_callback(dbRes_percar, dbRes_combo, lapTime=lh.lapTime, guid=driver.guid, playerName=driver.name)
+        self.check_pb_sb_callback(dbRes_percar, dbRes_combo, lapTime=lh.lapTime, guid=dbGuidMapper.guid_new(driver.guid), playerName=driver.name)
         self.ptClientsNewServerData()
 
     @acquire_lock
@@ -1636,7 +1643,7 @@ def onCommand(acmonitor, database, guid, command):
         for g in groups:
             if g['name'] == 'admins':
                 adminids.add(g['groupid'])
-        plyDetails = database.playerDetails(__sync=True, guid=guid)()
+        plyDetails = database.playerDetails(__sync=True, guid=dbGuidMapper.guid_new(guid))()
         check = len(adminids.intersection(set(plyDetails['memberOfGroup']))) > 0
     else:
         check = 1
@@ -1704,13 +1711,13 @@ def onCommand(acmonitor, database, guid, command):
             if command.startswith("messages"):
                 command = command[len("messages"):].strip()
                 if command == "on":
-                    disabled = database.messagesDisabled(__sync=True, guid=guid, name=d.name, newVal=0)()
+                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0)()
                     send_help = 0
                 elif command == "off":
-                    disabled = database.messagesDisabled(__sync=True, guid=guid, name=d.name, newVal=0x7fffffff)()
+                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0x7fffffff)()
                     send_help = 0
                 elif command == "status":
-                    disabled = database.messagesDisabled(__sync=True, guid=guid, name=d.name)()
+                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
                     send_help = 0
             help_commands.extend(["/st messages [on|off|status]"])
             if send_help == 0:
@@ -1730,7 +1737,7 @@ def onChat(acmonitor, database, guid, message):
         name = d.name
     else:
         name = "<unknown>"
-    database.recordChat(__sync=True, name=name, guid=guid, message=message, server=config.config.STRACKER_CONFIG.server_name)()
+    database.recordChat(__sync=True, name=name, guid=dbGuidMapper.guid_new(guid), message=message, server=config.config.STRACKER_CONFIG.server_name)()
     livemap.update_chat(name, message)
     if config.config.SWEAR_FILTER.action != config.config.SF_NONE:
         if chatfilter.isbad(message):
@@ -1746,6 +1753,27 @@ def onChat(acmonitor, database, guid, message):
                 num_warnings_left = config.config.SWEAR_FILTER.num_warnings - d.receivedBadWordWarnings
                 message = config.config.SWEAR_FILTER.warning % locals()
                 acmonitor.sendChatMessageToPlayer(d.guid, message)
+
+class DBGuidMapper:
+    def __init__(self):
+        self.map_orig_to_new = {}
+        self.map_new_to_orig = {}
+
+    def register_guid_mapping(self, guid_orig, guid_new):
+        d = hashlib.md5(guid_new.encode('utf8')).digest() # 16 bytes
+        d = struct.unpack('qq', d)
+        d = abs(d[0] ^ d[1])
+        guid_new = str(d)
+        self.map_orig_to_new[guid_orig] = guid_new
+        self.map_new_to_orig[guid_new] = guid_orig
+
+    def guid_orig(self, guid_new):
+        return self.map_new_to_orig.get(guid_new, guid_new)
+
+    def guid_new(self, guid_orig):
+        return self.map_orig_to_new.get(guid_orig, guid_orig)
+
+dbGuidMapper = DBGuidMapper()
 
 def run(dbBackend):
     acmonitor = None
