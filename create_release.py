@@ -91,23 +91,23 @@ if not stracker_only and not linux_only:
             svn_commit = subprocess.check_output([git, "commit", "-s", "-m", "prepare release %s" % version])
 
     ptracker_py_files = """\
-    ptracker.py
-    ptracker_lib/__init__.py
-    ptracker_lib/helpers.py
-    ptracker_lib/acsim.py
-    ptracker_lib/profiler.py
-    ptracker_lib/sim_info.py
-    ptracker_lib/client_server/__init__.py
-    ptracker_lib/client_server/ac_client_server.py
-    ptracker_lib/client_server/client_server.py
-    ptracker_lib/client_server/client_server_impl.py""".split("\n")
+ptracker.py
+ptracker_lib/__init__.py
+ptracker_lib/helpers.py
+ptracker_lib/acsim.py
+ptracker_lib/profiler.py
+ptracker_lib/sim_info.py
+ptracker_lib/client_server/__init__.py
+ptracker_lib/client_server/ac_client_server.py
+ptracker_lib/client_server/client_server.py
+ptracker_lib/client_server/client_server_impl.py""".split("\n")
 
     ptracker_pyd_files = """\
-    ptracker_lib/stdlib/_ctypes.pyd
-    ptracker_lib/stdlib/unicodedata.pyd
-    ptracker_lib/stdlib/CreateFileHook.dll
-    ptracker_lib/stdlib64/_ctypes.pyd
-    ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
+ptracker_lib/stdlib/_ctypes.pyd
+ptracker_lib/stdlib/unicodedata.pyd
+ptracker_lib/stdlib/CreateFileHook.dll
+ptracker_lib/stdlib64/_ctypes.pyd
+ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
 
     def patch_ptracker_server(files):
         files = sorted(files)
@@ -252,14 +252,14 @@ if not ptracker_only:
         if os.path.exists('stracker-default.ini'):
             os.remove('stracker-default.ini')
         os.system(r"dist\stracker.exe --stracker_ini stracker-default.ini 2>null")
-        r.write("stracker/dist/stracker.exe", "stracker.exe")
-        r.write("stracker/stracker-default.ini", "stracker-default.ini")
+        r.write("dist/stracker.exe", "stracker.exe")
+        r.write("stracker-default.ini", "stracker-default.ini")
         
     if not linux_only and not stracker_only:
         print("------------------- Building stracker-packager.exe ----------------------")
         assert 0 == os.system("pyinstaller --clean -y --onefile --path .. --path externals stracker-packager.py")
         #assert 0 == os.system("python -m py2exe.build_exe stracker-packager.py -OO -c --bundle-files 0 -i ctypes -x django")
-        r.write("stracker/dist/stracker-packager.exe", "stracker-packager.exe")
+        r.write("dist/stracker-packager.exe", "stracker-packager.exe")
     os.chdir("..")
 
     r.write("stracker/README.txt", "README.txt")
