@@ -65,9 +65,9 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 if not test_release_process:
-    git_status = subprocess.check_output([git, "status", "-s"], universal_newlines=True)
+    git_status = subprocess.check_output([git, "status", "-s", "-uno"], universal_newlines=True)
     if not git_status.strip() == "":
-        print ("svn is dirty. Check in your changes first.")
+        print ("git sandbox is dirty. Check in your changes first.")
         print (git_status)
         sys.exit(1)
 
