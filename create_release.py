@@ -243,7 +243,7 @@ if not ptracker_only:
     if os.path.exists('dist'):
         shutil.rmtree('dist')
 
-    r = zipfile.ZipFile("versions/stracker-V%s.zip" % version, "w")
+    r = zipfile.ZipFile("../versions/stracker-V%s.zip" % version, "w")
     
     if not linux_only and not stracker_packager_only:
         print("------------------- Building stracker.exe -------------------------------")
