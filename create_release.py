@@ -180,7 +180,7 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
             open(self.script, "w").write(s % subst)
             assert 0 == os.system('"C:/Program Files (x86)/NSIS/makensis.exe" %s' % self.script)
 
-    r = nsis_builder("ptracker-V%s.exe" % version, "ptracker.nsh") #zipfile.ZipFile("ptracker-V%s.zip" % version, "w")
+    r = nsis_builder("versions/ptracker-V%s.exe" % version, "ptracker.nsh") #zipfile.ZipFile("ptracker-V%s.zip" % version, "w")
 
     r.writestr(os.path.join("apps","python","ptracker","ptracker_lib","executable.py"),
                'ptracker_executable = ["apps/python/ptracker/dist/ptracker.exe"]\n'.encode(encoding="ascii"))
@@ -243,7 +243,7 @@ if not ptracker_only:
     if os.path.exists('dist'):
         shutil.rmtree('dist')
 
-    r = zipfile.ZipFile("stracker-V%s.zip" % version, "w")
+    r = zipfile.ZipFile("versions/stracker-V%s.zip" % version, "w")
     
     if not linux_only and not stracker_packager_only:
         print("------------------- Building stracker.exe -------------------------------")
