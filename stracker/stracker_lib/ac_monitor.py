@@ -808,17 +808,17 @@ class ACMonitor:
         return {'lap_details':ref()}
 
     def setupDepositGet(self, **kw):
-        kw[guid] = dbGuidMapper.guid_new(kw[guid])
+        kw["guid"] = dbGuidMapper.guid_new(kw["guid"])
         ref = self.database.setupDepositGet(__sync=True, **kw)
         return ref()
 
     def setupDepositSave(self, **kw):
-        kw[guid] = dbGuidMapper.guid_new(kw[guid])
+        kw["guid"] = dbGuidMapper.guid_new(kw["guid"])
         self.database.setupDepositSave(__sync=True, **kw)()
         return {'ok': 1}
 
     def setupDepositRemove(self, **kw):
-        kw[guid] = dbGuidMapper.guid_new(kw[guid])
+        kw["guid"] = dbGuidMapper.guid_new(kw["guid"])
         self.database.setupDepositRemove(__sync=True, **kw)()
         return {'ok': 1}
 
