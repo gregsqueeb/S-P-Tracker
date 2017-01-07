@@ -313,6 +313,7 @@ class LapStatDisplay:
             ('Delta coloring'                        , (EnumSelector, (["delta column", "all columns", "none"],), 'config.CONFIG_RACE.delta_coloring')),
             ('Show race delta'                       , (CheckBox, (), 'config.CONFIG_RACE.show_deltas', None, guiNeedsReInit)),
             ('Show tyres'                            , (CheckBox, (), 'config.LAYOUT.leaderboard_show_tyre', None, guiNeedsReInit)),
+            ('Show MR rating (thanks Minolin!)'      , (CheckBox, (), 'config.LAYOUT.leaderboard_show_mr_rating', None, guiNeedsReInit)),
             ('Number of team characters (0->disable)', (Spinner, (0, 0, 30, 1), 'config.LAYOUT.team_num_char', None, guiNeedsReInit)),
             ('Leader board style'                    , (EnumSelector, (["orange/green", "gray", "green", "blue", "red", "yellow", "none"],), 'config.GLOBAL.leaderboard_style', None, guiNeedsReInit)),
             ('Number of leaderboard name characters' , (Spinner, (0, 0, 30, 1), 'config.LAYOUT.leaderboard_num_char', None, guiNeedsReInit)),

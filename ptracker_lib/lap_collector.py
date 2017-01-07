@@ -26,6 +26,7 @@ import math
 import os.path
 import re
 import time
+from ptracker_lib import helithreading
 from ptracker_lib import acsim
 from ptracker_lib.helpers import *
 try:
@@ -66,6 +67,7 @@ class BisectOnListAttr:
 
 tyre_re = re.compile(r'\((\w+)\)')
 tyre_dict = {}
+mr_dict = {}
 
 class LapCollector:
 
@@ -145,6 +147,7 @@ class LapCollector:
         self.connected = False
         self.server_guid = None
         self.jerkyMotionCounter = 0
+        self.mr_rating = None
         acdebug("LC %d: Initializing %s", self.carId, self.name)
 
     def playerId(self):
@@ -215,13 +218,23 @@ class LapCollector:
         self.updateSectors(sim_info_obj, softTspSectors)
         self.updatePitInfo()
         self.updateServerData(server_data, sim_info_obj)
+        if not config is None and config.LAYOUT.leaderboard_show_mr_rating:
+            mr = helithreading.getDriverRating(self.name)
+            if mr is None: mr = ''
+            if not mr in mr_dict:
+                mr_dict[mr] = os.path.join("apps", "python", "ptracker", "images", "mr_"+mr.lower()+".png")
+                if not os.path.exists(mr_dict[mr]):
+                    acinfo("MR '%s' doesn't seem to have an image associated. Using default.", mr)
+                    mr_dict[mr] = os.path.join("apps", "python", "ptracker", "images", "mr_unknown.png")
+            self.mr_rating = self.mr_rating = mr_dict[mr]
 
     def updateServerData(self, sd, sim_info_obj):
         self.team = sd.get('team', "")
-        if self.carId == 0:
-            t = sim_info_obj.graphics.tyreCompound
-        else:
-            t = sd.get('tyre', "")
+        #if self.carId == 0:
+        #    t = sim_info_obj.graphics.tyreCompound
+        #else:
+        if 1:
+            t = '(' + acsim.ac.getCarTyreCompound(self.carId) + ')'
         default_tyre = os.path.join("apps", "python", "ptracker", "images", "tyre_unknown.png")
         M = tyre_re.search(t)
         if not M is None:

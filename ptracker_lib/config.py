@@ -248,6 +248,7 @@ class Config:
                 'leaderboard_num_char' : (0, conf.getint, 'Set this to the number of characters to be used in the leaderboard display. 0 means to limit by available space.'),
                 'leaderboard_show_badge' : (1, conf.getboolean, 'set to 1 to show the badge.'),
                 'leaderboard_show_tyre' : (1, conf.getboolean, 'set to 1 to show the tyre icon'),
+                'leaderboard_show_mr_rating' : (0, conf.getboolean, 'set to 1 to show the MR rating (with kind permission from Minolin, you are awesome!)'),
                 'team_num_char' : (0, conf.getint, 'Set to the number of characters of the team column (0 to not show the team)'),
             }
         self.fpsOptimized['LAYOUT.leaderboard_show_badge'] = False
