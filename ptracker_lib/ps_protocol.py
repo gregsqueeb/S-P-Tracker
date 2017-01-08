@@ -112,7 +112,7 @@ class CompressedConnection:
 class ProtocolHandler:
 
     # protocol version
-    PROT_VERSION = 14
+    PROT_VERSION = 15
 
     # requests as seen from ptracker as client and stracker as server
     REQ_PROTO_START = 0
@@ -792,6 +792,7 @@ class ProtocolHandler:
                 if 'tyre' in pi: features = features | 128
                 if self.prot_version >= 11 and 'connected' in pi: features = features | 256
                 if self.prot_version >= 11 and 'currLapInvalidated' in pi: features = features | 512
+                if self.prot_version >= 15 and 'mr_rating' in pi: features = features | 1024
                 if self.prot_version >= 11:
                     packed += struct.pack('<QH', int(guid), features)
                 else:
@@ -807,6 +808,8 @@ class ProtocolHandler:
                 if features & 128: packed += self._pack_string(pi['tyre'])
                 if features & 256: packed += struct.pack('<b', pi['connected'])
                 if features & 512: packed += struct.pack('<b', pi['currLapInvalidated'])
+                if features & 1024:
+                    packed += self._pack_string(pi['mr_rating'])
             features = 0
             if 'penaltiesEnabled' in session_state: features = features | 1
             if 'allowedTyresOut' in session_state: features = features | 2
@@ -1190,6 +1193,8 @@ class ProtocolHandler:
                 if features & 128: r['tyre'] = self._unpack_string()
                 if self.prot_version >= 11 and features & 256: r['connected'], = self._unpack_from_format('<b')
                 if self.prot_version >= 11 and features & 512: r['currLapInvalidated'], = self._unpack_from_format('<b')
+                if self.prot_version >= 15 and features & 1024:
+                    r['mr_rating'] = self._unpack_string()
                 pti.append(r)
             features, = self._unpack_from_format('<b')
             if features & 1 : session_state['penaltiesEnabled'], = self._unpack_from_format('<b')

@@ -1028,6 +1028,7 @@ class PersonalHotlaps:
                 self.serverData[guid]['team'] = r.get('team', "")
                 self.serverData[guid]['tyre'] = r.get('tyre', "")
                 self.serverData[guid]['ptracker_conn'] = r['ptracker_conn']
+                self.serverData[guid]['mr_rating'] = r.get('mr_rating', None)
                 if 'connected' in r:
                     self.serverData[guid]['connected'] = r['connected']
                 found = False

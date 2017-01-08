@@ -219,14 +219,17 @@ class LapCollector:
         self.updatePitInfo()
         self.updateServerData(server_data, sim_info_obj)
         if not config is None and config.LAYOUT.leaderboard_show_mr_rating:
-            mr = helithreading.getDriverRating(self.name)
-            if mr is None: mr = ''
+            mr = server_data.get('mr_rating', None)
+            if mr is None or mr == '':
+                mr = helithreading.getDriverRating(self.name)
+            if mr is None:
+                mr = ''
             if not mr in mr_dict:
                 mr_dict[mr] = os.path.join("apps", "python", "ptracker", "images", "mr_"+mr.lower()+".png")
                 if not os.path.exists(mr_dict[mr]):
                     acinfo("MR '%s' doesn't seem to have an image associated. Using default.", mr)
                     mr_dict[mr] = os.path.join("apps", "python", "ptracker", "images", "mr_unknown.png")
-            self.mr_rating = self.mr_rating = mr_dict[mr]
+            self.mr_rating = mr_dict[mr]
 
     def updateServerData(self, sd, sim_info_obj):
         self.team = sd.get('team', "")

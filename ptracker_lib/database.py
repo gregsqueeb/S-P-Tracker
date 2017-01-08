@@ -171,6 +171,7 @@ class LapDatabase:
         self.filterChat           = CallWrapper(self, lambda *args, self=self, **kw: self.db().filterChat(*args, **kw))
         self.messagesDisabled     = CallWrapper(self, lambda *args, self=self, **kw: self.db().messagesDisabled(*args, **kw))
         self.getPtsResponse       = CallWrapper(self, lambda *args, self=self, **kw: self.db().getPtsResponse(*args, **kw))
+        self.queryMR              = CallWrapper(self, lambda *args, self=self, **kw: self.db().queryMR(*args, **kw))
         self.isOnline = lambda self=self: self.db().isOnline()
         # create the database
         self._db = None

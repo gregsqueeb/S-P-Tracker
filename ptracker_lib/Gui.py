@@ -37,7 +37,7 @@ from ptracker_lib import img_scaler
 from ptracker_lib import acsim
 
 LeaderboardDisplay = functools.partial(GenericTableDisplay,
-    colToNameMappings=[["lblLBPositions","lblLBDriverState","lblLBBadge","lblLBTyre","lblMR","lblLBTeam","lblLBNames","lblLBLaps","lblLBDelta","lblLBLapTime"]])
+    colToNameMappings=[["lblLBPositions","lblLBDriverState","lblLBBadge","lblLBTyre","lblLBTeam","lblLBNames","lblLBLaps","lblLBDelta","lblLBLapTime","lblMR"]])
 
 MessageDisplay = functools.partial(GenericTableDisplay,
     colToNameMappings=[["lblMessage"]])
@@ -363,7 +363,7 @@ class Gui:
             halign=config.LAYOUT.halign,
             marginX=lbMarginX,
             marginY=optMarginY,
-            expandingX=[5] if config.LAYOUT.hexpand else False)
+            expandingX=[6] if config.LAYOUT.hexpand else False)
 
         self.race_ly = GridLayout(
             x=0,
@@ -404,7 +404,7 @@ class Gui:
             halign=config.LAYOUT.halign,
             marginX=lbMarginX,
             marginY=optMarginY,
-            expandingX=[5] if config.LAYOUT.hexpand else False)
+            expandingX=[6] if config.LAYOUT.hexpand else False)
 
         self.qual_ly = GridLayout(
             x=0,
