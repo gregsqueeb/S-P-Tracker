@@ -356,6 +356,7 @@ class ACDriver:
         "p3d",
         "currLapInvalidated",
         "receivedBadWordWarnings",
+        "minorating",
     ]
 
     def __init__(self, guid, newLapCallback):
@@ -368,6 +369,7 @@ class ACDriver:
         self.track_checksum = "unknown"
         self.car_checksum = "unknown"
         self.ptracker_conn = None
+        self.minorating = ''
         self.pending_messages = []
         self.carId = -1
         self.laps = []
@@ -852,6 +854,7 @@ class ACMonitor:
             r['last_time'] = lastTime
             r['currLapInvalidated'] = pl.currLapInvalidated
             r['connected'] = pl.carId >= 0
+            r['mr_rating'] = pl.minorating
             # check for connection
             if not pl.ptracker_conn is None:
                 conn = pl.ptracker_conn
@@ -1147,6 +1150,9 @@ class ACMonitor:
                                   mtype=MTYPE_ENTER_LEAVE)
         self.check_for_ptracker_connection(d)
         self.updateOnline()
+        if config.minorating_enabled():
+            if not config.config.STRACKER_CONFIG.guids_based_on_driver_names:
+                d.minorating = self.database.queryMR(__sync=True, guid=event.driverGuid)()
 
     @acquire_lock
     def connectionLost(self, event):

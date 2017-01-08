@@ -99,6 +99,7 @@ class DummyAcsim:
             def isCarInPit(self, cid): return self.parent.state['isCarInPit'][cid]
             def isConnected(self, cid): return self.parent.state['isConnected'][cid]
             def getCarBallast(self, cid): return self.parent.state['getCarBallast'][cid]
+            def getCarTyreCompound(self, cid): return self.parent.state['getCarTyreCompound'][cid]
             def getFocusedCar(self): return self.parent.state['getFocusedCar']
             def getServerIP(self): return self.parent.state['getServerIP']
             def getServerHttpPort(self): return self.parent.state['getServerHttpPort']

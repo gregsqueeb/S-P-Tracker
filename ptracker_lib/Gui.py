@@ -37,7 +37,7 @@ from ptracker_lib import img_scaler
 from ptracker_lib import acsim
 
 LeaderboardDisplay = functools.partial(GenericTableDisplay,
-    colToNameMappings=[["lblLBPositions","lblLBDriverState","lblLBBadge","lblLBTyre","lblLBTeam","lblLBNames","lblLBLaps","lblLBDelta","lblLBLapTime"]])
+    colToNameMappings=[["lblLBPositions","lblLBDriverState","lblLBBadge","lblLBTyre","lblLBTeam","lblLBNames","lblLBLaps","lblLBDelta","lblLBLapTime","lblMR"]])
 
 MessageDisplay = functools.partial(GenericTableDisplay,
     colToNameMappings=[["lblMessage"]])
@@ -352,6 +352,7 @@ class Gui:
                        WE_pos(chr(0x1f3c1)) if config.CONFIG_RACE.show_driver_status else 0,
                        config.LAYOUT_RACE.leaderboard_row_height if config.LAYOUT.leaderboard_show_badge else 0,
                        config.LAYOUT_RACE.leaderboard_row_height if config.LAYOUT.leaderboard_show_tyre else 0,
+                       config.LAYOUT_RACE.leaderboard_row_height if config.LAYOUT.leaderboard_show_mr_rating else 0,
                        team_width,
                        name_width,
                        WE_pos("000")+4 if config.CONFIG_RACE.leaderboard_show_lap_count else 0,
@@ -362,7 +363,7 @@ class Gui:
             halign=config.LAYOUT.halign,
             marginX=lbMarginX,
             marginY=optMarginY,
-            expandingX=[5] if config.LAYOUT.hexpand else False)
+            expandingX=[6] if config.LAYOUT.hexpand else False)
 
         self.race_ly = GridLayout(
             x=0,
@@ -394,6 +395,7 @@ class Gui:
                        WE_pos(chr(0x1f3c1)) if config.CONFIG_RACE.show_driver_status else 0,
                        config.LAYOUT_QUAL.leaderboard_row_height if config.LAYOUT.leaderboard_show_badge else 0,
                        config.LAYOUT_QUAL.leaderboard_row_height if config.LAYOUT.leaderboard_show_tyre else 0,
+                       config.LAYOUT_RACE.leaderboard_row_height if config.LAYOUT.leaderboard_show_mr_rating else 0,
                        team_width,
                        name_width,
                        WE_laptime(time_test_str)+4],
@@ -402,7 +404,7 @@ class Gui:
             halign=config.LAYOUT.halign,
             marginX=lbMarginX,
             marginY=optMarginY,
-            expandingX=[5] if config.LAYOUT.hexpand else False)
+            expandingX=[6] if config.LAYOUT.hexpand else False)
 
         self.qual_ly = GridLayout(
             x=0,
@@ -495,19 +497,21 @@ class Gui:
             self.race_ly_leaderboard[(i,1)] = self.lbDisplay.lblLBDriverState[i]
             self.race_ly_leaderboard[(i,2)] = self.lbDisplay.lblLBBadge[i]
             self.race_ly_leaderboard[(i,3)] = self.lbDisplay.lblLBTyre[i]
-            self.race_ly_leaderboard[(i,4)] = self.lbDisplay.lblLBTeam[i]
-            self.race_ly_leaderboard[(i,5)] = self.lbDisplay.lblLBNames[i]
-            self.race_ly_leaderboard[(i,6)] = self.lbDisplay.lblLBLaps[i]
-            self.race_ly_leaderboard[(i,7)] = self.lbDisplay.lblLBDelta[i]
-            self.race_ly_leaderboard[(i,8)] = self.lbDisplay.lblLBLapTime[i]
+            self.race_ly_leaderboard[(i,4)] = self.lbDisplay.lblMR[i]
+            self.race_ly_leaderboard[(i,5)] = self.lbDisplay.lblLBTeam[i]
+            self.race_ly_leaderboard[(i,6)] = self.lbDisplay.lblLBNames[i]
+            self.race_ly_leaderboard[(i,7)] = self.lbDisplay.lblLBLaps[i]
+            self.race_ly_leaderboard[(i,8)] = self.lbDisplay.lblLBDelta[i]
+            self.race_ly_leaderboard[(i,9)] = self.lbDisplay.lblLBLapTime[i]
 
             self.qual_ly_leaderboard[(i,0)] = self.lbDisplay.lblLBPositions[i]
             self.qual_ly_leaderboard[(i,1)] = self.lbDisplay.lblLBDriverState[i]
             self.qual_ly_leaderboard[(i,2)] = self.lbDisplay.lblLBBadge[i]
             self.qual_ly_leaderboard[(i,3)] = self.lbDisplay.lblLBTyre[i]
-            self.qual_ly_leaderboard[(i,4)] = self.lbDisplay.lblLBTeam[i]
-            self.qual_ly_leaderboard[(i,5)] = self.lbDisplay.lblLBNames[i]
-            self.qual_ly_leaderboard[(i,6)] = self.lbDisplay.lblLBLapTime[i]
+            self.qual_ly_leaderboard[(i,4)] = self.lbDisplay.lblMR[i]
+            self.qual_ly_leaderboard[(i,5)] = self.lbDisplay.lblLBTeam[i]
+            self.qual_ly_leaderboard[(i,6)] = self.lbDisplay.lblLBNames[i]
+            self.qual_ly_leaderboard[(i,7)] = self.lbDisplay.lblLBLapTime[i]
 
             l = self.lbDisplay.lblLBNames[i]
             if config.LAYOUT.leaderboard_num_char > 0:
@@ -637,6 +641,7 @@ class Gui:
         badge = lc.badge
         delta = lc.delta_self
         tyre = lc.tyre
+        mr = lc.mr_rating
         team = lc.team
         bestTimeInt = lc.bestLapTime
         lastTimeInt = lc.lastLapTime
@@ -702,7 +707,7 @@ class Gui:
         if not lc.connected:
             dcolor = config.COLORS_RACE.notconnected
             btcolor = config.COLORS_RACE.notconnected
-        return name, badge, delta, bestTime, dcolor, btcolor, tyre, team, lapCount, rcolor, lc.carId, lc.raceFinished
+        return name, badge, delta, bestTime, dcolor, btcolor, tyre, mr, team, lapCount, rcolor, lc.carId, lc.raceFinished
 
     def raceItemIsBestTime(self, lcIdx):
         lc = self.ptracker.lapCollectors[lcIdx]
@@ -719,12 +724,14 @@ class Gui:
         if not lc is None:
             badge = lc.badge
             tyre = lc.tyre
+            mr = lc.mr_rating
             team = lc.team
             carId = lc.carId
         else:
             carId = None
             badge = None
             tyre = None
+            mr = None
             team = ""
         delta = ""
         r = self.ptracker.results[k]
@@ -749,7 +756,7 @@ class Gui:
         if lc is None or not lc.connected:
             dcolor = config.COLORS_RACE.notconnected
             btcolor = config.COLORS_RACE.notconnected
-        return name, badge, delta, bestTime, dcolor, btcolor, tyre, team, 0, dcolor, carId, False
+        return name, badge, delta, bestTime, dcolor, btcolor, tyre, mr, team, 0, dcolor, carId, False
 
     def qualItemIsBestTime(self, resultIdx):
         k = list(self.ptracker.results.keys())[resultIdx]
@@ -844,7 +851,7 @@ class Gui:
             if i < 0 or i >= len(permutation):
                 continue
             ip = permutation[i]
-            name, badge, delta, bestTime, dcolor, btcolor, tyre, team, lapCount, rcolor, carId, finished = itemCallback(ip, i, selfIndex)
+            name, badge, delta, bestTime, dcolor, btcolor, tyre, mr, team, lapCount, rcolor, carId, finished = itemCallback(ip, i, selfIndex)
             pos = "%d." % (i+1)
             driverState = ""
             if finished:
@@ -871,6 +878,7 @@ class Gui:
             self.lbDisplay.lblLBDriverState[row].setText(driverState).setFontColor(rcolor)
             self.lbDisplay.lblLBBadge[row].setBackgroundImage(badge)
             self.lbDisplay.lblLBTyre[row].setBackgroundImage(tyre)
+            self.lbDisplay.lblMR[row].setBackgroundImage(mr)
             self.lbDisplay.lblLBTeam[row].setText(team).setFontColor(rcolor)
             self.lbDisplay.lblLBNames[row].setText(name).setFontColor(rcolor)
             self.lbDisplay.lblLBLaps[row].setText("%d" % lapCount).setFontColor(rcolor)

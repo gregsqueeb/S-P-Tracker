@@ -26,6 +26,7 @@ import struct
 import functools
 import re
 import time
+import traceback
 from ptracker_lib.helpers import *
 from ptracker_lib.dbschemata import DbSchemata
 import ptracker_lib
@@ -2495,6 +2496,45 @@ class GenericBackend(DbSchemata):
                 res.append(line)
             return {'messages' : res, 'totalCount': count}
 
+    def queryMR(self, guid):
+        with self.db:
+            cur = self.db.cursor()
+            cur.execute("SELECT Timestamp, Minorating, MRCacheId FROM MinoratingCache NATURAL JOIN Players WHERE Players.SteamGuid=:guid", locals())
+            ans = cur.fetchone()
+            res = None
+            now = unixtime_now()
+            if not ans is None and now - ans[0] < 24*3600 and not ans[1] is None:
+                res = ans[1]
+            else:
+                if not ans is None:
+                    cid = ans[2]
+                    cur.execute("DELETE FROM MinoratingCache WHERE MRCacheId=:cid", locals())
+                res = None
+                # try to query the minorating from minolin's server
+                from stracker_lib.acauth import PerformAuth
+                tree = [
+                    "ABC", ["C", "C", ["A", "A", "B"]],
+                           ["N", "N", ["D", "D", "W"]]]
+                t = tree
+                try:
+                    import urllib
+                    while type(t) == list:
+                        url = "http://plugin.minorating.com:805/minodata/auth/%s/?GUID=%s" % (t[0], guid)
+                        acdebug("Querying %s ...", url)
+                        ans = urllib.request.urlopen(url, timeout=1.0)
+                        ans = ans.read().decode(ans.headers.get_content_charset('utf-8')).strip()
+                        acdebug("Result: %s", ans[:2])
+                        if ans.startswith("OK"):
+                            t = t[1]
+                        else:
+                            t = t[2]
+                    res = t
+                except:
+                    acwarning("Cannot read MR rating: %s", traceback.format_exc())
+                if not res is None:
+                    cur.execute("INSERT INTO MinoratingCache(PlayerId,Timestamp,Minorating) SELECT PlayerId, :now, :res FROM Players WHERE SteamGuid=:guid", locals())
+            return res.lower()
+
     def populate(self, other):
         def arg_list(n):
             return (','.join([':%d']*n)) % tuple(range(n))
@@ -2536,6 +2576,8 @@ class GenericBackend(DbSchemata):
             pass
         with self.db:
             cur = self.db.cursor()
+            delete_time = unixtime_now() - 25 * 3600
+            cur.execute("DELETE FROM MinoratingCache WHERE Timestamp < :delete_time", locals())
             if mode == COMPRESS_DELETE_ALL:
                 tables = self.tables(cur)
                 # make sure we delete the foreign key tables first

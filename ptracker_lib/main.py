@@ -688,6 +688,7 @@ class PersonalHotlaps:
     def updateRacePositions(self, dt):
         for lc in self.lapCollectors:
             sd = self.serverData.get(lc.server_guid, {})
+            #acdebug("sd[update %s %s] = %s", lc.name, lc.server_guid, sd)
             lc.update(self.sim_info_obj, self.lapCollectors[0], self.softSectorsTsp, dt, sd)
         if self.lastSessionType[0] == RACE: # race
             # compare to other cars
@@ -1028,14 +1029,18 @@ class PersonalHotlaps:
                 self.serverData[guid]['team'] = r.get('team', "")
                 self.serverData[guid]['tyre'] = r.get('tyre', "")
                 self.serverData[guid]['ptracker_conn'] = r['ptracker_conn']
+                self.serverData[guid]['mr_rating'] = r.get('mr_rating', None)
                 if 'connected' in r:
                     self.serverData[guid]['connected'] = r['connected']
                 found = False
+                #acdebug("SD[GUID %s] = %s", guid, self.serverData[guid])
                 for lc in self.lapCollectors:
                     if lc.name == r['name'] and lc.connected:
                         acdebug("found lap collector matching server guid (%s : %s)", lc.name, guid)
                         lc.server_guid = guid
                         found = True
+                    elif lc.server_guid == guid and lc.name != r['name']:
+                        lc.server_guid = None
                 if not found: acdebug("could not find matching lap collector for name %s, guid %s", r['name'], guid)
                 if 'setup' in r:
                     if not 'setup' in self.serverData[guid]:
@@ -1070,6 +1075,7 @@ class PersonalHotlaps:
             allGuids = set(self.serverData.keys())
             for guid in allGuids.difference(activeGuids):
                 del self.serverData[guid]
+                acdebug("removing inactive guid %s from server data", guid)
             ptrackerTyresOut = sd.get('session_state', {}).get('ptrackerTyresOut', self.numberOfTyresOutAllowed)
             if ptrackerTyresOut != self.numberOfTyresOutAllowed:
                 self.numberOfTyresOutAllowed = ptrackerTyresOut

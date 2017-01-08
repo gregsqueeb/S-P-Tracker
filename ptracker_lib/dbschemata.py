@@ -33,7 +33,7 @@ class DbSchemata:
         if not force_version is None:
             self.version = force_version
         else:
-            self.version = 22
+            self.version = 23
             if version < self.version and perform_backups:
                 print("Performing database backup before migration. This might take a while. You'd better not interrupt this process.")
                 self.backup(version, self.version)
@@ -1561,3 +1561,16 @@ class DbSchemata:
         cur.execute("UPDATE Lap SET HistoryInfo=NULL WHERE HistoryInfo NOTNULL")
         # make sure that the session duration is a sane integer, this gives errors when migrating to postgres otherwise
         cur.execute("UPDATE Session SET Duration=8640000 WHERE Duration > 8640000")
+
+    def migrate_22_23(self):
+        cur = self.db.cursor()
+        cur.execute("""
+            CREATE TABLE MinoratingCache (
+                MRCacheId %(primkey)s,
+                PlayerId INTEGER,
+                Timestamp INTEGER,
+                Minorating TEXT,
+                FOREIGN KEY (PlayerId) REFERENCES Players(PlayerId) DEFERRABLE
+            )
+        """ % self.__dict__)
+        self.setVersion(cur, 23)

@@ -287,11 +287,29 @@ class Config:
 def reread_acconfig(assert_options_unchanged):
     global acconfig
     acconfig_old = acconfig
+    mr_old = minorating_enabled()
     acconfig = configparser.ConfigParser(strict=False, interpolation=None, allow_no_value=True)
     acconfig.read(config.STRACKER_CONFIG.ac_server_cfg_ini)
     for section,option in assert_options_unchanged:
         if acconfig[section][option] != acconfig_old[section][option]:
             raise AssertionError
+    if mr_old != minorating_enabled():
+        mino_message()
+
+mino_message_logged = False
+def mino_message():
+    global mino_message_logged
+    mino_message_logged = True
+    if minorating_enabled():
+        acinfo("server is configured for minorating usage. MR cache is enabled.")
+    else:
+        acinfo("server is not configured for minorating usage. MR cache is disabled.")
+
+def minorating_enabled():
+    res = 'minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '')
+    if not mino_message_logged:
+        mino_message()
+    return res
 
 def create_config(ini_file_name, logger):
     global config, acconfig

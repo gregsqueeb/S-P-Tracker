@@ -77,6 +77,7 @@ def acState():
         isCarInPit = [acsim.ac.isCarInPit(cid) for cid in range(carsCount)],
         isConnected = [acsim.ac.isConnected(cid) for cid in range(carsCount)],
         getCarBallast = [acsim.ac.getCarBallast(cid) for cid in range(carsCount)],
+        getCarTyreCompound = [acsim.ac.getCarTyreCompound(cid) for cid in range(carsCount)],
         getFocusedCar = acsim.ac.getFocusedCar(),
         getServerIP = acsim.ac.getServerIP(),
         getServerHttpPort = acsim.ac.getServerHttpPort(),
