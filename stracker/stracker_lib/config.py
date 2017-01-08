@@ -296,14 +296,19 @@ def reread_acconfig(assert_options_unchanged):
     if mr_old != minorating_enabled():
         mino_message()
 
+mino_message_logged = False
 def mino_message():
+    global mino_message_logged
+    mino_message_logged = True
     if minorating_enabled():
         acinfo("server is configured for minorating usage. MR cache is enabled.")
     else:
         acinfo("server is not configured for minorating usage. MR cache is disabled.")
 
 def minorating_enabled():
-    return 'minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '')
+    res = 'minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '')
+    if not mino_message_logged:
+        mino_message()
 
 def create_config(ini_file_name, logger):
     global config, acconfig
@@ -322,7 +327,6 @@ def create_config(ini_file_name, logger):
         if not o in acconfig['SERVER']:
             acerror("AC server config does not contain option [SERVER]/%s, but this is needed for continueing!", o)
             raise RuntimeError
-    mino_message()
 
 def create_default_config(logger):
     global config
