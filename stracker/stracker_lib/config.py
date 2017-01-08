@@ -309,6 +309,7 @@ def minorating_enabled():
     res = 'minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '')
     if not mino_message_logged:
         mino_message()
+    return res
 
 def create_config(ini_file_name, logger):
     global config, acconfig
