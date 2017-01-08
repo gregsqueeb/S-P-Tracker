@@ -78,6 +78,7 @@ class LapCollector:
         self.isAI = isAI
         self.unplausibleVelocity = (500/3.6)*(500/3.6)
         self.ptracker = ptracker
+        self.server_guid = None
         self.init()
         acdebug("LC %d: created new lc instance for name=%s", carId, self.name)
 
@@ -145,7 +146,6 @@ class LapCollector:
         self.pitEnterTimestamp = None
         self.pitLeaveTimestamp = None
         self.connected = False
-        self.server_guid = None
         self.jerkyMotionCounter = 0
         self.mr_rating = None
         acdebug("LC %d: Initializing %s", self.carId, self.name)
