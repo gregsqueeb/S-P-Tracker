@@ -1036,7 +1036,7 @@ class ACMonitor:
             lapsBehind = self.currentSession.numLaps - d.lapCount()
             positions = self.calc_positions(quiet=True)
             for i,p in enumerate(positions):
-                if p['steamGuid'] != dbGuidMapper.new_guid(d.guid):
+                if p['steamGuid'] != dbGuidMapper.guid_new(d.guid):
                     continue
                 if i < 3 and lapsBehind == 0:
                     i2msg = {0:"has won the race!", 1:"has finished second!", 2:"has finished third!"}
