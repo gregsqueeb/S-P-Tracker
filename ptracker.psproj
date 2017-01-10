@@ -114,70 +114,74 @@ FileName=$[Project-Path]ptracker_lib\GuiStatistics.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node20]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\helpers.py
+FileName=$[Project-Path]ptracker_lib\helithreading.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node21]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\hooked.py
+FileName=$[Project-Path]ptracker_lib\helpers.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node22]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\img_scaler.py
+FileName=$[Project-Path]ptracker_lib\hooked.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node23]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\lap_collector.py
+FileName=$[Project-Path]ptracker_lib\img_scaler.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node24]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\main.py
+FileName=$[Project-Path]ptracker_lib\lap_collector.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node25]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\message_types.py
+FileName=$[Project-Path]ptracker_lib\main.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node26]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\OptionTracker.py
+FileName=$[Project-Path]ptracker_lib\message_types.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node27]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\png.py
+FileName=$[Project-Path]ptracker_lib\OptionTracker.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node28]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\profiler.py
+FileName=$[Project-Path]ptracker_lib\png.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node29]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\ps_protocol.py
+FileName=$[Project-Path]ptracker_lib\profiler.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node30]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\qtbrowser.py
+FileName=$[Project-Path]ptracker_lib\ps_protocol.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node31]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\qtbrowser_common.py
+FileName=$[Project-Path]ptracker_lib\qtbrowser.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node32]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\read_ui_data.py
+FileName=$[Project-Path]ptracker_lib\qtbrowser_common.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node33]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\sim_info.py
+FileName=$[Project-Path]ptracker_lib\read_ui_data.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node34]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]ptracker_lib\sound.py
+FileName=$[Project-Path]ptracker_lib\sim_info.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node35]
+ClassName=TProjectFileNode
+FileName=$[Project-Path]ptracker_lib\sound.py
+
+[Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes\Node36]
 ClassName=TProjectFileNode
 FileName=$[Project-Path]ptracker_lib\st_actions.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node0\ChildNodes]
-Count=36
+Count=37
 
 [Project\ChildNodes\Node0\ChildNodes\Node1]
 ClassName=TProjectFolderNode
@@ -500,30 +504,34 @@ FileName=$[Project-Path]stracker\stracker_lib\logger.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node13]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]stracker\stracker_lib\network_monitor.py
+FileName=$[Project-Path]stracker\stracker_lib\mr_query.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node14]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]stracker\stracker_lib\stacktracer.py
+FileName=$[Project-Path]stracker\stracker_lib\network_monitor.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node15]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]stracker\stracker_lib\stracker_shm.py
+FileName=$[Project-Path]stracker\stracker_lib\stacktracer.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node16]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]stracker\stracker_lib\stracker_udp_plugin.py
+FileName=$[Project-Path]stracker\stracker_lib\stracker_shm.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node17]
 ClassName=TProjectFileNode
-FileName=$[Project-Path]stracker\stracker_lib\streaming_support.py
+FileName=$[Project-Path]stracker\stracker_lib\stracker_udp_plugin.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node18]
+ClassName=TProjectFileNode
+FileName=$[Project-Path]stracker\stracker_lib\streaming_support.py
+
+[Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes\Node19]
 ClassName=TProjectFileNode
 FileName=$[Project-Path]stracker\stracker_lib\tail.py
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node2\ChildNodes]
-Count=19
+Count=20
 
 [Project\ChildNodes\Node0\ChildNodes\Node1\ChildNodes\Node3]
 ClassName=TProjectFolderNode

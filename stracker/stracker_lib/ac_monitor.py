@@ -43,6 +43,7 @@ from stracker_lib.stacktracer import ShortlyLockedRLock as RLock
 from stracker_lib import livemap
 from stracker_lib.ac_session_manager import SessionManager
 from stracker_lib import chatfilter
+from stracker_lib.mr_query import MRQuery
 from ptracker_lib.ps_protocol import ProtocolHandler
 from ptracker_lib import dbgeneric
 from ptracker_lib.database import LapDatabase
@@ -602,6 +603,7 @@ class ACMonitor:
         self.udp_port = config.acconfig['SERVER'].getint('UDP_PORT')
         self.adminpwd = config.acconfig['SERVER'].get('ADMIN_PASSWORD', None)
         self.currentSession = None
+        self.mr_query = MRQuery(database, self.new_mr_rating)
         self.sessionStartTime = time.time()
         self.allDrivers = AllDrivers()
         self.setups = {}
@@ -1036,7 +1038,7 @@ class ACMonitor:
             lapsBehind = self.currentSession.numLaps - d.lapCount()
             positions = self.calc_positions(quiet=True)
             for i,p in enumerate(positions):
-                if p['steamGuid'] != dbGuidMapper.new_guid(d.guid):
+                if p['steamGuid'] != dbGuidMapper.guid_new(d.guid):
                     continue
                 if i < 3 and lapsBehind == 0:
                     i2msg = {0:"has won the race!", 1:"has finished second!", 2:"has finished third!"}
@@ -1152,7 +1154,7 @@ class ACMonitor:
         self.updateOnline()
         if config.minorating_enabled():
             if not config.config.STRACKER_CONFIG.guids_based_on_driver_names:
-                d.minorating = self.database.queryMR(__sync=True, guid=event.driverGuid)()
+                self.mr_query.query(guid=event.driverGuid)
 
     @acquire_lock
     def connectionLost(self, event):
@@ -1234,6 +1236,15 @@ class ACMonitor:
                     if not cd is None:
                         np.append(cd)
                 livemap.update_ranking(np)
+
+    @acquire_lock
+    def new_mr_rating(self, guid, rating):
+        d = self.allDrivers.byGuidActive(guid)
+        if not d is None and d.minorating != rating:
+            d.minorating = rating
+            for pd in self.allDrivers.allDriversWithPtracker():
+                self.newServerDataAvailable.add(pd.guid)
+            self.send_server_data()
 
     # -----------------------------------------------------------------------------
     # -----------------------------------------------------------------------------
