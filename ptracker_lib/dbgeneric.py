@@ -26,7 +26,6 @@ import struct
 import functools
 import re
 import time
-import traceback
 from ptracker_lib.helpers import *
 from ptracker_lib.dbschemata import DbSchemata
 import ptracker_lib
@@ -1402,7 +1401,7 @@ class GenericBackend(DbSchemata):
             m = t // 60000
             s =(t-m*60000)//1000
             ms = t%1000
-            acinfo("  <oldpos=%2d> <t=%02d:%03d.%03d> <lc=%2d>", p['posorig'],m,s,ms,lc)
+            acdebug("  <oldpos=%2s> <t=%02d:%03d.%03d> <lc=%2s>", p['posorig'],m,s,ms,lc)
 
         classment = []
         cNumLaps = 0
@@ -1438,7 +1437,7 @@ class GenericBackend(DbSchemata):
         for p in players:
             pisid = p['pisid']
             newpos = p['newPos']
-            acinfo("recalc players pos: %d <oldPos=%d> <newPos=%d>", pisid, p['posorig'], newpos)
+            acdebug("recalc players pos: %d <oldPos=%s> <newPos=%d>", pisid, p['posorig'], newpos)
             c.execute("""
                 UPDATE PlayerInSession
                 SET FinishPosition=:newpos
@@ -2496,7 +2495,7 @@ class GenericBackend(DbSchemata):
                 res.append(line)
             return {'messages' : res, 'totalCount': count}
 
-    def queryMR(self, guid):
+    def queryMR(self, guid, set_rating = None):
         with self.db:
             cur = self.db.cursor()
             cur.execute("SELECT Timestamp, Minorating, MRCacheId FROM MinoratingCache NATURAL JOIN Players WHERE Players.SteamGuid=:guid", locals())
@@ -2509,31 +2508,9 @@ class GenericBackend(DbSchemata):
                 if not ans is None:
                     cid = ans[2]
                     cur.execute("DELETE FROM MinoratingCache WHERE MRCacheId=:cid", locals())
-                res = None
-                # try to query the minorating from minolin's server
-                from stracker_lib.acauth import PerformAuth
-                tree = [
-                    "ABC", ["C", "C", ["A", "A", "B"]],
-                           ["N", "N", ["D", "D", "W"]]]
-                t = tree
-                try:
-                    import urllib
-                    while type(t) == list:
-                        url = "http://plugin.minorating.com:805/minodata/auth/%s/?GUID=%s" % (t[0], guid)
-                        acdebug("Querying %s ...", url)
-                        ans = urllib.request.urlopen(url, timeout=1.0)
-                        ans = ans.read().decode(ans.headers.get_content_charset('utf-8')).strip()
-                        acdebug("Result: %s", ans[:2])
-                        if ans.startswith("OK"):
-                            t = t[1]
-                        else:
-                            t = t[2]
-                    res = t
-                except:
-                    acwarning("Cannot read MR rating: %s", traceback.format_exc())
-                if not res is None:
-                    cur.execute("INSERT INTO MinoratingCache(PlayerId,Timestamp,Minorating) SELECT PlayerId, :now, :res FROM Players WHERE SteamGuid=:guid", locals())
-            return res.lower()
+                if not set_rating is None:
+                    cur.execute("INSERT INTO MinoratingCache(PlayerId,Timestamp,Minorating) SELECT PlayerId, :now, :set_rating FROM Players WHERE SteamGuid=:guid", locals())
+            return res.lower() if not res is None else ''
 
     def populate(self, other):
         def arg_list(n):

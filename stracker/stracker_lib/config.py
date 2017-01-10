@@ -303,10 +303,11 @@ def mino_message():
     if minorating_enabled():
         acinfo("server is configured for minorating usage. MR cache is enabled.")
     else:
-        acinfo("server is not configured for minorating usage. MR cache is disabled.")
+        acinfo("server is not configured for minorating usage (AUTH_PLUGIN_ADDRESS). MR cache is disabled.")
 
 def minorating_enabled():
-    res = 'minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '')
+    res = ('minorating.com' in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', '') or
+           'minoratingcom'  in acconfig["SERVER"].get('AUTH_PLUGIN_ADDRESS', ''))
     if not mino_message_logged:
         mino_message()
     return res
