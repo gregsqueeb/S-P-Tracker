@@ -15,6 +15,7 @@ generic
 [  ] - position graph per lap in session player details
 [  ] - DRS usage time per lap?
 [  ] - session type filtering http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-144#post-739478
+[  ] - add GPL license file to ptracker and stracker
 
 for 3.3.x
 
@@ -33,6 +34,8 @@ for 3.3.x
 [  ] - problem with cuts from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-139#post-711487
 [  ] - multiple lap comparisons from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-139#post-711486
 [  ] - autokick from marty: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-143#post-732238
+[  ] - add community section in downloads: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-151#post-821242
+[  ] - more info about current session: http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-151#post-821285
 
 ptracker
 --------
