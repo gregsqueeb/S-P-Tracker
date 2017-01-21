@@ -128,6 +128,7 @@ class LapCollector:
         self.delta_self_filtered = 0
         self.delta_self_alpha = 1.
         self.delta_self_2nd = 0
+        self.lap_delta = 0
         self.LIVE = 0
         self.TRIGGERED = 1
         self.showCountdown = 0
@@ -165,7 +166,7 @@ class LapCollector:
             return False
         return True
 
-    def setDelta(self, delta, triggerMode):
+    def setDelta(self, delta, triggerMode, lap_delta):
         if triggerMode == self.LIVE:
             self.delta_self_filtered = self.delta_self_filtered * (1.-self.delta_self_alpha) + delta * self.delta_self_alpha
             self.delta_self_alpha = max(1./config.CONFIG_RACE.delta_2nd_deriv_filter_strength, 1./((1./self.delta_self_alpha)+1.))
@@ -174,6 +175,7 @@ class LapCollector:
             self.delta_self_filtered = self.delta_self
             self.delta_self = delta
         self.delta_self_2nd = self.delta_self - self.delta_self_filtered
+        self.lap_delta = lap_delta
 
     def splitTimes(self, num_sectors):
         s = 0

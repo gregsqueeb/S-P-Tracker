@@ -640,6 +640,7 @@ class Gui:
         name = lc.name
         badge = lc.badge
         delta = lc.delta_self
+        lap_delta = lc.lap_delta
         tyre = lc.tyre
         mr = lc.mr_rating
         team = lc.team
@@ -647,12 +648,15 @@ class Gui:
         lastTimeInt = lc.lastLapTime
         lapCount = lc.samples[-1].lapCount if len(lc.samples) > 0 else 0
         myassert(type(name) == type(""))
-        # only for opponents
-        if delta > 99990:
-            delta = 99990
-        elif delta < -99990:
-            delta = -99990
-        delta = self.format_time(delta, True)
+        if lap_delta == 0:
+            # only for opponents
+            if delta > 99990:
+                delta = 99990
+            elif delta < -99990:
+                delta = -99990
+            delta = self.format_time(delta, True)
+        else:
+            delta = "%+d L" % lap_delta
         if config.CONFIG_RACE.coloring_mode == config.CM_RACE_ORDER:
             if racePosition < selfPosition:
                 dcolor = config.COLORS_RACE.race_order_before_color
