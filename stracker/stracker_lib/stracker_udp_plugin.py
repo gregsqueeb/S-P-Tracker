@@ -80,7 +80,7 @@ class CarState:
                  'lapTime', 'cuts', 'gripLevel',
                  'lapHistory', 'lapCount', 'sumLapTimes', 'lapTimeRcvTime',
                  'collCarCount', 'collEnvCount', 'maxSpeed', 'lastRealTimeRcvTime', 'lastHistoryEntry', 'inactiveSince', 'active',
-                 'pitPosition')
+                 'pitPosition', 'raceCompleted')
 
     def __init__(self, **kw):
         for a in self.__slots__:
@@ -101,6 +101,8 @@ class CarState:
             self.lastRealTimeRcvTime = time.time()
         if self.active is None:
             self.active = False
+        if self.raceCompleted is None:
+            self.raceCompleted = False
 
     def resetLap(self):
         self.lapHistory = []
@@ -343,6 +345,7 @@ class StrackerUDPPlugin:
             self.cars[c].resetLap()
             self.cars[c].active = False
             self.cars[c].pitPosition = None
+            self.cars[c].raceCompleted = False
         trackname = self.currentSession.track
         if not self.currentSession.track_config in [None, '']:
             trackname += "-" + self.currentSession.track_config
@@ -401,17 +404,27 @@ class StrackerUDPPlugin:
                 self.cars[event.carId].lapCount += 1
                 # fix lap count in case of mid-race stracker start
                 for lbe in event.leaderboard:
-                    if lbe.carId == event.carId and lbe.laps > self.cars[event.carId].lapCount:
-                        self.cars[event.carId].lapCount = lbe.laps
+                    if lbe.carId == event.carId:
+                        if lbe.laps > self.cars[event.carId].lapCount:
+                            self.cars[event.carId].lapCount = lbe.laps
+                        if lbe.completed:
+                            self.cars[event.carId].raceCompleted = True
                         break
                 self.cars[event.carId].sumLapTimes += event.lapTime
-                if (self.currentSession.sessionType == SESST_RACE
-                        and self.cars[event.carId].lapCount == self.currentSession.laps
-                        and self.currentSession.raceFinishTimeStamp is None):
-                    self.currentSession.raceFinishTimeStamp = self.cars[event.carId].lapTimeRcvTime
-                    acdebug("recorded race finish timestamp")
-                    self.cbSessionInfo(self.currentSession)
-                    # notify about raceFinishTimeStamp...
+
+                if self.currentSession.sessionType == SESST_RACE:
+
+                    if ((self.currentSession.laps > 0 and
+                         self.cars[event.carId].lapCount == self.currentSession.laps) or
+                        (self.currentSession.laps == 0 and
+                         self.cars[event.carId].raceCompleted)):
+
+                        if self.currentSession.raceFinishTimeStamp is None:
+                            self.currentSession.raceFinishTimeStamp = self.cars[event.carId].lapTimeRcvTime
+                            acdebug("recorded race finish timestamp")
+                            self.cbSessionInfo(self.currentSession)
+                            # notify about raceFinishTimeStamp...
+
                 self.cbLapCompleted(self.cars[event.carId])
                 self.cars[event.carId].resetLap()
         if self.welcomePending.get(event.carId, False) and not getattr(event, 'driverGuid', None) is None:

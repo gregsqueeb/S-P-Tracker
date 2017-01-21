@@ -992,6 +992,7 @@ class ACMonitor:
                 'playerIsAI':0,
                 'raceFinished':raceFinished,
                 'finishTime':finishTime,
+                'numLaps':p.lapCount(),
             })
         return positions
 
@@ -1032,11 +1033,22 @@ class ACMonitor:
             return
         self.check_for_ptracker_connection(d)
         d.lapCompletedEvent(carInfo, self.currentSession.apprSessionStartTime)
-        if self.currentSession.numLaps > 0 and d.lapCount() == self.currentSession.numLaps or self.currentSession.raceFinished:
+
+        # finish race if the session is closed
+        playerHasFinishedRace = self.currentSession.raceFinished
+        # finish race for constant lap sessions and achieving the lap limit
+        playerHasFinishedRace = playerHasFinishedRace or (self.currentSession.numLaps > 0
+                                            and d.lapCount() == self.currentSession.numLaps)
+        # finish race for timed race sessions when the plugin signals completed
+        playerHasFinishedRace = playerHasFinishedRace or (self.currentSession.sessionType == stracker_udp_plugin.SESST_RACE
+                                            and self.currentSession.numLaps == 0
+                                            and carInfo.raceCompleted)
+
+        if playerHasFinishedRace and not d.raceFinished:
             d.raceFinished = True
             self.currentSession.raceFinished = True
-            lapsBehind = self.currentSession.numLaps - d.lapCount()
             positions = self.calc_positions(quiet=True)
+            lapsBehind = positions[0]['numLaps'] - d.lapCount()
             for i,p in enumerate(positions):
                 if p['steamGuid'] != dbGuidMapper.guid_new(d.guid):
                     continue

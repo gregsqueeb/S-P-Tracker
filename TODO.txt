@@ -16,6 +16,7 @@ generic
 [  ] - DRS usage time per lap?
 [  ] - session type filtering http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-2-a2b-track-spectating-chat-filter-swear-filter.13169/page-144#post-739478
 [  ] - add GPL license file to ptracker and stracker
+[  ] - Bruno Compagnone: Can you put an icon for stability control (on/off) in the laps page?
 
 for 3.3.x
 

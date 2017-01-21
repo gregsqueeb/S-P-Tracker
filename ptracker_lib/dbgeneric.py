@@ -1406,6 +1406,8 @@ class GenericBackend(DbSchemata):
         classment = []
         cNumLaps = 0
         winnerIdx = None
+        if numLaps == 0: # this has been a timed race
+            numLaps = max([flc[2] for flc in finishLineCrossings])
         # find the first fl crossing with enough number of laps
         for idx,flc in enumerate(finishLineCrossings):
             lc = flc[2]
