@@ -68,6 +68,7 @@ class DummyAcsim:
                     acsys.CS.WorldPosition: 'csWorldPosition',
                     acsys.CS.LastLap: 'csLastLap',
                     acsys.CS.BestLap: 'csBestLap',
+                    acsys.CS.RaceFinished: 'csRaceFinished',
                 }
                 self.DEBUG = 0
                 self.parent = parent

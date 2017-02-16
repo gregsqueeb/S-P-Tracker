@@ -324,7 +324,8 @@ class LapCollector:
                     self.lastLapTime = lastLap
                     self.lastLapValid = self.lapValid
                     self.lapValid = True
-                    if sim_info_obj.graphics.numberOfLaps > 0 and self.samples[-1].lapCount == sim_info_obj.graphics.numberOfLaps:
+                    if ((sim_info_obj.graphics.numberOfLaps > 0 and self.samples[-1].lapCount == sim_info_obj.graphics.numberOfLaps) or
+                                (sim_info_obj.graphics.numberOfLaps == 0 and acsim.ac.getCarState(self.carId, acsys.CS.RaceFinished))):
                         self.raceFinished = True
                         self.raceFinishedSince = 0.0
                         acinfo("LC %d: Driver %s has finished the race", self.carId, self.name)

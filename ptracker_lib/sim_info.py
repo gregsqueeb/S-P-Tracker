@@ -206,6 +206,13 @@ class SPageFileStatic(ctypes.Structure):
         ('kersMaxJ', c_float),
         ('engineBrakeSettingsCount', c_int32),
         ('ersPowerControllerCount', c_int32),
+        
+        ('trackSPlineLength', c_float),
+        ('trackConfiguration', c_wchar*33),
+        ('ersMaxJ', c_float),
+        
+        ('isTimedRace', c_int32),
+        ('hasExtraLap', c_int32),
     ]
 
 class SimInfo:

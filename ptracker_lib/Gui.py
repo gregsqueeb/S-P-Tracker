@@ -1064,7 +1064,30 @@ class Gui:
             else:
                 t = "%d/%d" % (lc+1,nl)
         else:
-            t = format_time_s(self.ptracker.sim_info_obj.graphics.sessionTimeLeft)
+            t = None
+            if( nl == 0 and
+                self.ptracker.sim_info_obj.graphics.session == self.SESSION_RACE):
+                # is timed race
+                if self.ptracker.sim_info_obj.graphics.iCurrentTime == 0:
+                    # do not display countdown to start (unfair advantage)
+                    t = "--:--"
+                if self.ptracker.sim_info_obj.graphics.completedLaps+1 < 100:
+                    laptmpl = "%d / %d"
+                else:
+                    laptmpl = "%d/%d"
+                if self.ptracker.specRaceFinished:
+                    t = laptmpl % (self.ptracker.sim_info_obj.graphics.completedLaps, self.ptracker.sim_info_obj.graphics.completedLaps)
+                elif self.ptracker.raceFinished:
+                    t = laptmpl % (self.ptracker.sim_info_obj.graphics.completedLaps+1, self.ptracker.sim_info_obj.graphics.completedLaps+1)
+                elif self.ptracker.sim_info_obj.graphics.sessionTimeLeft <= 0:
+                    # we would need to know whether the leader is in last lap or not (he might be not due to extra lap)
+                    # anyway, we assume extra lap is off, and then everything is fine here
+                    if self.ptracker.specBeforeLeader:
+                        t = laptmpl % (self.ptracker.sim_info_obj.graphics.completedLaps+1, self.ptracker.sim_info_obj.graphics.completedLaps+2)
+                    else:
+                        t = laptmpl % (self.ptracker.sim_info_obj.graphics.completedLaps+1, self.ptracker.sim_info_obj.graphics.completedLaps+1)
+            if t is None:
+                t = format_time_s(self.ptracker.sim_info_obj.graphics.sessionTimeLeft)
         self.lblSessionDisplay.setText(t)
         # update stracker connection display
         connStatus = 0

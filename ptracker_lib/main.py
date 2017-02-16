@@ -179,6 +179,9 @@ class PersonalHotlaps:
         self.fpsMode = config.GLOBAL.fps_mode
         self.numberOfTyresOutAllowed = 2
         self.syncUpdateCountdown = 0
+        self.raceFinished = False
+        self.specRaceFinished = False
+        self.specBeforeLeader = False
         self.isLive = False
 
     def connectToStracker(self, *args):
@@ -691,6 +694,7 @@ class PersonalHotlaps:
             #acdebug("sd[update %s %s] = %s", lc.name, lc.server_guid, sd)
             lc.update(self.sim_info_obj, self.lapCollectors[0], self.softSectorsTsp, dt, sd)
         if self.lastSessionType[0] == RACE: # race
+            self.raceFinished = any([lc.raceFinished for lc in self.lapCollectors])
             # compare to other cars
             validIndices = list(filter(lambda x, seq=self.lapCollectors: seq[x].active(), range(len(self.lapCollectors))))
             argsort = lambda seq: sorted(validIndices,
@@ -803,6 +807,8 @@ class PersonalHotlaps:
         specId = acsim.ac.getFocusedCar()
         nsp = []
         for lc in self.lapCollectors:
+            if lc.carId == specId:
+                self.specRaceFinished = lc.raceFinished
             if lc.connected:
                 nsp.append((lc.carId, acsim.ac.getCarState(lc.carId, acsys.CS.NormalizedSplinePosition)))
         nsp = sorted(nsp, key=lambda x: x[1])
@@ -814,6 +820,12 @@ class PersonalHotlaps:
                 break
         for idx,c in enumerate(nsp):
             self.trackPositions[c[0]] = (idx - idxFocused + len(nsp) + len(nsp)//2) % len(nsp)
+        if len(self.opponents_order) > 0:
+            nspSpec = acsim.ac.getCarState(specId, acsys.CS.NormalizedSplinePosition)
+            nspLeader = acsim.ac.getCarState(self.opponents_order[0], acsys.CS.NormalizedSplinePosition)
+            self.specBeforeLeader = nspSpec > nspLeader
+        else:
+            self.specBeforeLeader = False
 
     def checkNewLapsForSaving(self):
         track = self.getTrackName()
