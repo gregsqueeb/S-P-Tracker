@@ -19,7 +19,7 @@
 import bisect
 import collections
 import hashlib
-from math import sqrt
+from math import sqrt, floor
 import glob
 import os
 import os.path
@@ -179,6 +179,9 @@ class PersonalHotlaps:
         self.fpsMode = config.GLOBAL.fps_mode
         self.numberOfTyresOutAllowed = 2
         self.syncUpdateCountdown = 0
+        self.raceFinished = False
+        self.specRaceFinished = False
+        self.specBeforeLeader = False
         self.isLive = False
 
     def connectToStracker(self, *args):
@@ -691,6 +694,7 @@ class PersonalHotlaps:
             #acdebug("sd[update %s %s] = %s", lc.name, lc.server_guid, sd)
             lc.update(self.sim_info_obj, self.lapCollectors[0], self.softSectorsTsp, dt, sd)
         if self.lastSessionType[0] == RACE: # race
+            self.raceFinished = any([lc.raceFinished for lc in self.lapCollectors])
             # compare to other cars
             validIndices = list(filter(lambda x, seq=self.lapCollectors: seq[x].active(), range(len(self.lapCollectors))))
             argsort = lambda seq: sorted(validIndices,
@@ -723,6 +727,7 @@ class PersonalHotlaps:
                     delta_ref = self.opponents_order[0]
                 cself = self.lapCollectors[delta_ref]
                 cself.delta_self = 0
+                tsp_self = cself.samples[-1].totalSplinePosition if len(cself.samples) > 0 else 0
                 for i in validIndices:
                     if i == delta_ref:
                         self.lapCollectors[i].delta_self = 0.0
@@ -734,13 +739,15 @@ class PersonalHotlaps:
                     oTsp1 = oTsp2
                     if len(cother.samples) > 2:
                         oTsp1 = cother.samples[-2].totalSplinePosition
+                    lap_delta = tsp_self - oTsp2
+                    lap_delta = floor(abs(lap_delta))*(-1 if lap_delta < 0 else +1)
                     if config.CONFIG_RACE.sync_live:
                         # update deltas live
                         self.syncUpdateCountdown = config.CONFIG_RACE.sync_interval
                         cother.showCountdown = config.CONFIG_RACE.sync_interval+1
                         mode = cother.LIVE if config.CONFIG_RACE.sync_interval <= 0 else cother.TRIGGERED
                         d = -cself.delta(cother)
-                        cother.setDelta(d, mode)
+                        cother.setDelta(d, mode, lap_delta)
                     else:
                         # update deltas on sector crossing
                         if (cself.sectorsUpdated or cself.lapsUpdated) and cself.currentSector() != self.comparisonSector:
@@ -751,7 +758,7 @@ class PersonalHotlaps:
                             if cother.leaderboardIndex < cself.leaderboardIndex:
                                 # other car is in front of us, show the delta
                                 delta_t = -cself.delta(cother)
-                                cother.setDelta(delta_t, cother.TRIGGERED)
+                                cother.setDelta(delta_t, cother.TRIGGERED, lap_delta)
                                 cother.showCountdown = newComparisonSectorCountdown
                             else:
                                 # other car is behind us, do not show delta until it crosses our sector
@@ -761,7 +768,7 @@ class PersonalHotlaps:
                               cother.showCountdown <= 0.0 and
                               self.comparisonSectorCountdown > 0.0):
                             delta_t = -cself.delta(cother)
-                            cother.setDelta(delta_t, cother.TRIGGERED)
+                            cother.setDelta(delta_t, cother.TRIGGERED, lap_delta)
                             cother.showCountdown = self.comparisonSectorCountdown
             self.comparisonSector = newComparisonSector
             self.comparisonSectorCountdown = newComparisonSectorCountdown
@@ -800,6 +807,8 @@ class PersonalHotlaps:
         specId = acsim.ac.getFocusedCar()
         nsp = []
         for lc in self.lapCollectors:
+            if lc.carId == specId:
+                self.specRaceFinished = lc.raceFinished
             if lc.connected:
                 nsp.append((lc.carId, acsim.ac.getCarState(lc.carId, acsys.CS.NormalizedSplinePosition)))
         nsp = sorted(nsp, key=lambda x: x[1])
@@ -811,6 +820,12 @@ class PersonalHotlaps:
                 break
         for idx,c in enumerate(nsp):
             self.trackPositions[c[0]] = (idx - idxFocused + len(nsp) + len(nsp)//2) % len(nsp)
+        if len(self.opponents_order) > 0:
+            nspSpec = acsim.ac.getCarState(specId, acsys.CS.NormalizedSplinePosition)
+            nspLeader = acsim.ac.getCarState(self.opponents_order[0], acsys.CS.NormalizedSplinePosition)
+            self.specBeforeLeader = nspSpec > nspLeader
+        else:
+            self.specBeforeLeader = False
 
     def checkNewLapsForSaving(self):
         track = self.getTrackName()

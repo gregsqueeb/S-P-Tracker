@@ -72,6 +72,7 @@ def acState():
         csLastLap = [acsim.ac.getCarState(cid, acsys.CS.LastLap) for cid in range(carsCount)],
         csBestLap = [acsim.ac.getCarState(cid, acsys.CS.BestLap) for cid in range(carsCount)],
         csWorldPosition = [acsim.ac.getCarState(cid, acsys.CS.WorldPosition) for cid in range(carsCount)],
+        csRaceFinished = [acsim.ac.getCarState(cid, acsys.CS.RaceFinished) for cid in range(carsCount)],
         currentSplits = [acsim.ac.getCurrentSplits(cid) for cid in range(carsCount)],
         isCarInPitlane = [acsim.ac.isCarInPitline(cid) for cid in range(carsCount)],
         isCarInPit = [acsim.ac.isCarInPit(cid) for cid in range(carsCount)],

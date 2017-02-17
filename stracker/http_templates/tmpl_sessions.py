@@ -493,7 +493,7 @@ function submitPenalties(pisId)
                 </tr>
 
                 <tr>
-                    <td>{{si['uitrack']}}</td>
+                    <td>{{si['uitrack'] if not si['uitrack'] is None else si['track']}}</td>
                     <td>{{si['sessionType']}}</td>
 % if displayNumLaps:
                     <td>{{si['numLaps']}}</td>
