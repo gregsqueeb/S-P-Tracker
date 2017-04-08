@@ -839,7 +839,7 @@ class PersonalHotlaps:
                 self.lapValid = 1
                 self.invalidReason = ""
                 self.assistanceTracker.resetDynamicAssists()
-            if lc.newLapDetected:
+            if lc.newLapDetected and not lc.lastNewLapDetected:
                 fuelRatio = -1
                 lastTime = lc.lastLapTime
                 timeOkToSave = True
