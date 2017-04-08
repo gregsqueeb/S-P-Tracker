@@ -333,6 +333,7 @@ class ACLap:
         self.timeInPit = other.timeInPit
         self.ballast = other.ballast
         self.fuelRatio = other.fuelRatio
+        self.escKeyPressed = other.escKeyPressed
 
 class ACDriver:
     __slots__ = [

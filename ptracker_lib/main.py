@@ -1173,6 +1173,8 @@ class PersonalHotlaps:
         # status 0: off, status 1: replay, status 2: live, status 3: pause
         self.isLive = (self.sim_info_obj.graphics.status != 1)
         if self.sim_info_obj.graphics.status == 3: # esc is pressed, pause; ignore these frames...
+            if not self.escPressed:
+                acdebug("ESC key press detected")
             self.escPressed = True
             return
         if self.sim_info_obj.graphics.status == 1: # replay
