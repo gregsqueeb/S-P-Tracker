@@ -49,8 +49,8 @@ class ACLogParser:
             acwarning("Cannot acquire steam guid from AC log file.")
         self._log_path = expand_ac.expand_ac('Assetto Corsa/logs/ptracker_fileobserver.txt')
         self._setup_path = expand_ac.expand_ac('Assetto Corsa/setups')
-        self._read_regex  = re.compile(r'^r: (' + re.escape(self._setup_path.replace('/','\\')) + r'.*)')
-        self._write_regex = re.compile(r'^w: (' + re.escape(self._setup_path.replace('/','\\')) + r'.*)')
+        self._read_regex  = re.compile(r'^r: (' + re.escape(self._setup_path.replace('/','\\')) + r'.*\.ini$)')
+        self._write_regex = re.compile(r'^w: (' + re.escape(self._setup_path.replace('/','\\')) + r'.*\.ini$)')
         self._current_setup = None
         self._current_name = None
         self._lock = RLock()
