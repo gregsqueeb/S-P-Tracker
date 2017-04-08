@@ -1351,7 +1351,7 @@ class ACMonitor:
         if not lap.cuts is None and lap.cuts > 0:
             acinfo("Setting lap to invalid because cuts > 0")
             valid = 0
-        if valid == 2 and self.currentSession.penaltiesEnabled and not lap.cuts is None and lap.cuts == 0:
+        if valid == 2 and self.currentSession.penaltiesEnabled and not lap.cuts is None and lap.cuts == 0 and lap.lapCount > 1:
             acinfo('Setting lap to valid bcause of cuts = 0 and penaltiesEnabled')
             valid = 1
         if config.config.LAP_VALID_CHECKS.invalidateOnCarCollisions and lap.collCarCount > 0:
