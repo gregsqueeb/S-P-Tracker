@@ -26,6 +26,7 @@ import struct
 import functools
 import re
 import time
+import traceback
 from ptracker_lib.helpers import *
 from ptracker_lib.dbschemata import DbSchemata
 import ptracker_lib
@@ -323,7 +324,7 @@ class GenericBackend(DbSchemata):
                 damage=sessionState.get('damage',None),
         )
 
-    def finishSession(self, positions):
+    def finishSession(self, positions, ac_positions = None):
         if self.currentSession is None:
             acinfo("currentsession is none, no session to finish.")
             return
@@ -350,6 +351,8 @@ class GenericBackend(DbSchemata):
                     continue
                 raceFinished = p['raceFinished']
                 finishTime = p['finishTime']
+                if ac_positions is None:
+                    ac_positions = {}
                 if not raceFinished:
                     sessionPosition += 1000
                 cur.execute("""
@@ -361,6 +364,31 @@ class GenericBackend(DbSchemata):
                     WHERE PlayerInSessionId IN (SELECT PlayerInSessionId FROM PlayerInSessionView
                                                 WHERE SteamGuid=:steamGuid AND Car=:carname AND SessionId=:sessionId)
                 """, locals())
+                if (steamGuid, carname) in ac_positions:
+                    try:
+                        cur.execute("SELECT PlayerInSessionId FROM PlayerInSessionView WHERE SteamGuid=:steamGuid AND Car=:carname AND SessionId=:sessionId", locals())
+                        pisid = cur.fetchone()
+                        if not pisid is None:
+                            pisid = pisid[0]
+                        cur.execute("""
+                            SELECT COUNT(*)
+                            FROM Lap
+                            WHERE PlayerInSessionId=:pisid
+                        """, locals())
+                        numlaps = cur.fetchone()
+                        numlaps = numlaps[0] if not numlaps is None else ac_positions[(steamGuid, carname)]['numlaps']
+                        deltaLaps = None
+                        deltaTime = None
+                        if finishTime != ac_positions[(steamGuid, carname)]['totaltime']:
+                            deltaTime = ac_positions[(steamGuid, carname)]['totaltime'] - finishTime
+                            acinfo("Correcting finish time of %s (%d)", playerName, deltaTime)
+                        if numlaps != ac_positions[(steamGuid, carname)]['numlaps']:
+                            deltaLaps = ac_positions[(steamGuid, carname)]['numlaps'] - numlaps
+                            acinfo("Correcting number of laps of %s (%d)", playerName, deltaLaps)
+                        self.playerInSessionPaCModify(pis_id=pisid, delta_time=deltaTime, delta_points=None, delta_laps=deltaLaps, comment="Auto-corrected for AC Lap timing bug", cursor=cur)
+                    except:
+                        acwarning("Error while using results.json to correct player %s. Continuing anyways.", playerName)
+                        acwarning(traceback.format_exc())
             endTime = unixtime_now()
             cur.execute("""
                 UPDATE Session SET
@@ -1446,9 +1474,13 @@ class GenericBackend(DbSchemata):
                 WHERE PlayerInSessionId=:pisid
             """, locals())
 
-    def playerInSessionPaCModify(self, pis_id, delta_time, delta_points, delta_laps, comment):
-        with self.db:
-            c = self.db.cursor()
+    def playerInSessionPaCModify(self, pis_id, delta_time, delta_points, delta_laps, comment, cursor = None):
+        if cursor is None:
+            with self.db:
+                c = self.db.cursor()
+                return self.playerInSessionPaCModify(pis_id, delta_time, delta_points, delta_laps, comment, cursor = c)
+        else:
+            c = cursor
             ans = c.execute("""
                 SELECT SessionId,NumberOfLaps,SessionType,PisCorrectionId
                 FROM PlayerInSession NATURAL JOIN Session NATURAL LEFT JOIN PisCorrections

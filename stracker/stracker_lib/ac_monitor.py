@@ -44,6 +44,7 @@ from stracker_lib import livemap
 from stracker_lib.ac_session_manager import SessionManager
 from stracker_lib import chatfilter
 from stracker_lib.mr_query import MRQuery
+from stracker_lib import jsonresult_parser
 from ptracker_lib.ps_protocol import ProtocolHandler
 from ptracker_lib import dbgeneric
 from ptracker_lib.database import LapDatabase
@@ -1004,7 +1005,7 @@ class ACMonitor:
     # -----------------------------------------------------------------------------
 
     @acquire_lock
-    def finishSession(self):
+    def finishSession(self, jsonresults = None):
         if not self.currentSession is None:
             self.savePendingLaps(True)
             positions = self.calc_positions()
@@ -1012,7 +1013,16 @@ class ACMonitor:
                 acinfo("finishing session")
             else:
                 acdebug("finishing session")
-            self.database.finishSession(__sync=True, positions=positions)()
+            ac_positions = None
+            if not jsonresults is None:
+                try:
+                    JR = jsonresult_parser.JsonResults(jsonresults)
+                    if JR.isRace():
+                        ac_positions = JR.racePositions()
+                except:
+                    acwarning("Error while parsing JSON results.")
+                    acwarning(traceback.format_exc())
+            self.database.finishSession(__sync=True, positions=positions, ac_positions=ac_positions)()
             self.currentSession = None
             self.allDrivers.setupNewSession()
         else:
