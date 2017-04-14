@@ -113,6 +113,7 @@ class LapCollector:
         self.lastLapTime = None
         self.lastLapOffset = None
         self.newLapDetected = False
+        self.lastNewLapDetected = False
         self.abEntryDetected = False
         self.possibleTspCorrection = 0
         self.tspCorrectionVotes = 0
@@ -197,6 +198,7 @@ class LapCollector:
         self.lastLapHistory = None
         self.sectorsUpdated = False
         self.lapsUpdated = False
+        self.lastNewLapDetected = self.newLapDetected
         self.newLapDetected = False
         self.abEntryDetected = False
         self.connected = acsim.ac.isConnected(self.carId)
@@ -556,6 +558,7 @@ class LapCollector:
                     # -> (nasty) workaround: lastLap = totalTime - lapTime (current) - lapOffset
                     item.lastLap = item.totalTime - item.lapTime - item.lapOffset
                     item.lapOffset += item.lastLap
+                #acdebug("newLapDetected %s: %d -> %d", self.name, lastItem.lapTime, item.lapTime)
                 self.newLapDetected = True
             else:
                 if item.lastLap is None:
