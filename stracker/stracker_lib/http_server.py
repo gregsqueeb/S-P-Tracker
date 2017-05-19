@@ -988,6 +988,16 @@ def start(database, listen_addr, listen_port, refBanlist, udp_plugin_):
     cherrypy.log.screen = False
     cherrypy.log.access_log.addHandler(LoggerHandler())
     cherrypy.log.error_log.addHandler(LoggerHandler())
+
+    if config.config.HTTP_CONFIG.ssl:
+        if (config.config.HTTP_CONFIG.ssl_certificate != "" and config.config.HTTP_CONFIG.ssl_private_key != "" and
+                os.access(config.config.HTTP_CONFIG.ssl_certificate, os.R_OK) and os.access(config.config.HTTP_CONFIG.ssl_private_key, os.R_OK)):
+            server.ssl_module = "builtin"
+            server.ssl_certificate = config.config.HTTP_CONFIG.ssl_certificate
+            server.ssl_private_key = config.config.HTTP_CONFIG.ssl_private_key
+        else:
+            acwarning("HTTPS set to be enabled, but certificate or private key either not provided or not readable. Falling back to non-SSL.")
+
     cherrypy.engine.start()
     started = True
     acdebug("http server started")

@@ -211,6 +211,9 @@ class Config:
             'inverse_navbar' : (False, conf.getboolean, 'set to true to get the navbar inverted (i.e., dark instead of bright)'),
             'velocity_unit' : (self.VU_KMH, self.getVelUnit, 'Valid values are "kmh" or "mph".'),
             'temperature_unit' : (self.TU_DEGC, self.getTempUnit, 'Valid values are "degc" or "degf".'),
+            'ssl' : (False, conf.getboolean, 'Set to true if you want to use https. Note that you need a SSL certificate and key. If you enable this option, you can reach stracker at https://ip:port/ instead of http://ip:port/'),
+            'ssl_certificate' : ('', conf.get, 'Path to the SSL certificate for https. Only used when ssl is True. A self-signed certificate can be generated with "openssl req -new -x509 -days 365 -key privkey.pem -out cert.pem"'),
+            'ssl_private_key' : ('', conf.get, 'Path to the SSL private key for https. Only used when ssl is True. A private key can be generated with "openssl genrsa -out privkey.pem 2048"'),
         }
         self.sections['BLACKLIST'] = {
             'blacklist_file' : ('', conf.get, 'Path to blacklist.txt of ac server. If empty, blacklist support will not be available. Changes to blacklist file require an AC server restart to be active.'),
