@@ -22,6 +22,7 @@ import queue
 import functools
 import copy
 import traceback
+import os.path
 from collections import namedtuple
 
 from acplugins4python.ac_server_plugin import  ACServerPlugin
@@ -323,7 +324,22 @@ class StrackerUDPPlugin:
             self.acPlugin.enableRealtimeReport(self.rtReportMS)
             self.cbServerRestart()
         elif type(event) == EndSession:
-            self.cbFinishSession()
+            fn = event.filename
+            if config.config.STRACKER_CONFIG.ac_server_working_dir != "":
+                fn = config.config.STRACKER_CONFIG.ac_server_working_dir + "/" + fn
+            else:
+                if not os.path.isfile(fn):
+                    # try to use it from a guessed working dir bad bad bad idea :/
+                    wd = os.path.split(config.config.STRACKER_CONFIG.ac_server_cfg_ini)[0]
+                    wd = os.path.split(wd)[0]
+                    fn = wd + "/" + fn
+            if not os.path.isfile(fn):
+                acwarning("Cannot read race result json file: %s", fn)
+                acwarning("Consider to set the option STRACKER_CONFIG/ac_server_working_dir in stracker.ini")
+                fn = None
+            else:
+                acinfo("Reading server results from %s", fn)
+            self.cbFinishSession(jsonresults = fn)
         elif type(event) == ChatEvent:
             if event.message.lower().startswith("/st") and event.carId in self.cars:
                 cmd = event.message[len("/st"):].strip()

@@ -149,6 +149,7 @@ class Config:
         self.sections = collections.OrderedDict()
         self.sections['STRACKER_CONFIG'] = {
             'ac_server_cfg_ini' : ('', conf.get, 'Path to configuration file of ac server. Note: whenever the server is restarted, it is required to restart stracker as well'),
+            'ac_server_working_dir' : ('', conf.get, 'Working directory of the ac server, needed to read the race result json files. If empty, the directory is deduced from the ac_server_cfg_ini path assuming the default directory structure'),
             'ac_server_address' : ('127.0.0.1', conf.get, 'Server ip address or name used to poll results from. You should not touch the default value: 127.0.0.1'),
             'listening_port' : (50042, self.portValidator, "Listening port for incoming connections of ptracker. Must be one of 50042, 50043, 54242, 54243, 60023, 60024, 62323, 62324, 42423, 42424, 23232, 23233, <AC udp port>+42; ptracker will try all these ports on the ac server's ip address (until a better solution is found...)"),
             'server_name': ('acserver', conf.get, 'name for the server; sessions in the database will be tagged with that name; useful when more than one server is running in parallel on the same database'),
@@ -211,6 +212,9 @@ class Config:
             'inverse_navbar' : (False, conf.getboolean, 'set to true to get the navbar inverted (i.e., dark instead of bright)'),
             'velocity_unit' : (self.VU_KMH, self.getVelUnit, 'Valid values are "kmh" or "mph".'),
             'temperature_unit' : (self.TU_DEGC, self.getTempUnit, 'Valid values are "degc" or "degf".'),
+            'ssl' : (False, conf.getboolean, 'Set to true if you want to use https. Note that you need a SSL certificate and key. If you enable this option, you can reach stracker at https://ip:port/ instead of http://ip:port/'),
+            'ssl_certificate' : ('', conf.get, 'Path to the SSL certificate for https. Only used when ssl is True. A self-signed certificate can be generated with "openssl req -new -x509 -days 365 -key privkey.pem -out cert.pem"'),
+            'ssl_private_key' : ('', conf.get, 'Path to the SSL private key for https. Only used when ssl is True. A private key can be generated with "openssl genrsa -out privkey.pem 2048"'),
         }
         self.sections['BLACKLIST'] = {
             'blacklist_file' : ('', conf.get, 'Path to blacklist.txt of ac server. If empty, blacklist support will not be available. Changes to blacklist file require an AC server restart to be active.'),

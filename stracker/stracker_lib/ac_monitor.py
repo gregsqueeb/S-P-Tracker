@@ -44,6 +44,7 @@ from stracker_lib import livemap
 from stracker_lib.ac_session_manager import SessionManager
 from stracker_lib import chatfilter
 from stracker_lib.mr_query import MRQuery
+from stracker_lib import jsonresult_parser
 from ptracker_lib.ps_protocol import ProtocolHandler
 from ptracker_lib import dbgeneric
 from ptracker_lib.database import LapDatabase
@@ -391,6 +392,10 @@ class ACDriver:
         self.car = carState.carModel
         self.carId = carState.carId
 
+    def reconnectDriver(self, carState):
+        self.ptracker_conn = None
+        self.carId = carState.carId
+
     def updatePtrackerConn(self, connection, ac_version, pt_version, track_checksum, car_checksum):
         self.ptracker_conn = connection
         self.ac_version = ac_version
@@ -466,7 +471,7 @@ class ACDriver:
         return self.laps[-1].totalTime
 
     def bestTimeACValid(self):
-        laps = list(filter(lambda l: l.cuts in [0,None], self.laps))
+        laps = list(filter(lambda l: l.cuts in [0,None] and l.valid, self.laps))
         if len(laps) == 0:
             return None
         return min([l.lapTime for l in laps])
@@ -557,7 +562,7 @@ class AllDrivers:
                 res.append(d)
         return res
 
-    def cmpPlayerInSessionPrio(self, d1, d2):
+    def cmpPlayerInRaceSessionPrio(self, d1, d2):
         if d1.raceFinished and not d2.raceFinished:
             return -1
         if d2.raceFinished and not d1.raceFinished:
@@ -568,17 +573,41 @@ class AllDrivers:
             return +1
         return 0
 
-    def filterForClassification(self):
+    def cmpPlayerInQualSessionPrio(self, d1, d2):
+        bt1 = d1.bestTimeACValid()
+        bt2 = d2.bestTimeACValid()
+        if not bt1 is None and bt2 is None:
+            return -1
+        if not bt2 is None and bt1 is None:
+            return +1
+        if bt1 is None and bt2 is None:
+            return 0
+        if bt1 < bt2:
+            return -1
+        if bt2 < bt1:
+            return +1
+        return 0
+
+    def filterForClassification(self, sessiontype):
         driversByGuid = {}
         res = []
         for d in self.drivers:
             if not d.guid in driversByGuid:
                 driversByGuid[d.guid] = []
             driversByGuid[d.guid].append(d)
-        for guid in driversByGuid:
-            p = sorted(driversByGuid[guid], key=functools.cmp_to_key(self.cmpPlayerInSessionPrio))
-            res.append(p[0])
-        return res
+        if sessiontype == stracker_udp_plugin.SESST_RACE:
+            # in case of multiple cars for one driver, use the one finished the
+            # race or the one with the most laps
+            for guid in driversByGuid:
+                p = sorted(driversByGuid[guid], key=functools.cmp_to_key(self.cmpPlayerInRaceSessionPrio))
+                res.append(p[0])
+            return res
+        else:
+            # use the one with the quickest valid lap
+            for guid in driversByGuid:
+                p = sorted(driversByGuid[guid], key=functools.cmp_to_key(self.cmpPlayerInQualSessionPrio))
+                res.append(p[0])
+            return res
 
     def setupNewSession(self):
         newDrivers = []
@@ -858,6 +887,7 @@ class ACMonitor:
             r['currLapInvalidated'] = pl.currLapInvalidated
             r['connected'] = pl.carId >= 0
             r['mr_rating'] = pl.minorating
+            r['carid'] = pl.carId
             # check for connection
             if not pl.ptracker_conn is None:
                 conn = pl.ptracker_conn
@@ -971,7 +1001,7 @@ class ACMonitor:
 
     @acquire_lock
     def calc_positions(self, quiet=False):
-        players = self.allDrivers.filterForClassification()
+        players = self.allDrivers.filterForClassification(self.currentSession.sessionType)
         ply_sorted = sorted(players,
                             key=functools.cmp_to_key(functools.partial(self.cmp_ply_final_position,
                                                      isRace=self.currentSession.sessionType == stracker_udp_plugin.SESST_RACE)))
@@ -1004,7 +1034,7 @@ class ACMonitor:
     # -----------------------------------------------------------------------------
 
     @acquire_lock
-    def finishSession(self):
+    def finishSession(self, jsonresults = None):
         if not self.currentSession is None:
             self.savePendingLaps(True)
             positions = self.calc_positions()
@@ -1012,7 +1042,16 @@ class ACMonitor:
                 acinfo("finishing session")
             else:
                 acdebug("finishing session")
-            self.database.finishSession(__sync=True, positions=positions)()
+            ac_positions = None
+            if not jsonresults is None:
+                try:
+                    JR = jsonresult_parser.JsonResults(jsonresults)
+                    if JR.isRace():
+                        ac_positions = JR.racePositions()
+                except:
+                    acwarning("Error while parsing JSON results.")
+                    acwarning(traceback.format_exc())
+            self.database.finishSession(__sync=True, positions=positions, ac_positions=ac_positions)()
             self.currentSession = None
             self.allDrivers.setupNewSession()
         else:
@@ -1153,9 +1192,17 @@ class ACMonitor:
     def newConnection(self, event):
         if config.config.STRACKER_CONFIG.guids_based_on_driver_names:
             dbGuidMapper.register_guid_mapping(event.driverGuid, event.driverName)
-        d = ACDriver(event.driverGuid, self.saveLap)
-        d.newConnectionEvent(event)
-        d = self.allDrivers.addDriver(d)
+        # check if a rejoin occured
+        d = None
+        for td in self.allDrivers.byGuidAll(event.driverGuid):
+            if event.carModel == td.car:
+                d = td
+        if d is None:
+            d = ACDriver(event.driverGuid, self.saveLap)
+            d.newConnectionEvent(event)
+            d = self.allDrivers.addDriver(d)
+        else:
+            d.reconnectDriver(event)
         car_display = ""
         if len(self.currentSession.cars) > 1:
             uiname = self.currentSession.carsUi.get(d.car, d.car)
