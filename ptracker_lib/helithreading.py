@@ -19,35 +19,17 @@ requestPending = False
 lastErrorTimestamp = time.time()
 errors_in_sequence = 0
 
-# The result contains some Ids that will speed up the query massively,
-# so we'll just store them on the fly
-lastMRSessionId = -1
-driverSteamId = -1
-
 # driver name, car model and track are unique per Helicorsa session, they only need to be setup once
-driverName = ""
-carModel = ""
-track = ""
 lockit = threading.RLock()
 ratings = {}
 name_queries = {}
 
 # this is the template for the web request
-urlstrtemplate = 'http://app.minorating.com:805/minodata/getMRServerInfo/?id={}&session={}&name={}&model={}&track={}&anotherDriver=&sessionType=&serverIp={}&serverPort={}'
+urlstrtemplate = 'http://app.minorating.com:806/minodata/drivers/?serverIp={}&serverPort={}'
 urlstr = ""
 
 def initConstants():
-    global driverSteamId, driverName, carModel, track
-
-    driverName = acsim.ac.getDriverName(0)
-    carModel = acsim.ac.getCarName(0)
-    track = acsim.ac.getTrackName(0)
-    driverSteamId = RaceIniFile().guid()
-    if driverSteamId is None: driverSteamId = -1
-    if(str(acsim.ac.getTrackConfiguration(0)) == "-1"):
-        track = track + "[]"
-    else:
-        track = track + "[" + acsim.ac.getTrackConfiguration(0) + "]"
+    pass
 
 def requestMinoratingData(name):
     global requestPending, urlstr, name_queries
@@ -73,7 +55,7 @@ def requestMinoratingData(name):
                 with lockit:
                     if name in ratings:
                         del ratings[name]
-        urlstr = urlstrtemplate.format(driverSteamId, lastMRSessionId, driverName, carModel, track, acsim.ac.getServerIP(), acsim.ac.getServerHttpPort())
+        urlstr = urlstrtemplate.format(acsim.ac.getServerIP(), acsim.ac.getServerHttpPort())
         acdebug("helithreading::FetchPage.Start(): " + urlstr)
         requestPending = True
         FetchPage().start()
@@ -105,16 +87,13 @@ class FetchPage(threading.Thread):
                 acdebug("MR returned %s", request_resp)
                 json_data = json.loads(request_resp)
                 new_ratings = {}
-                for d in json_data["drivers"]:
+                for d in json_data:
                     new_ratings[d["name"]] = d["grade"]
                 with lockit:
                     for name in ratings:
                         if not name in new_ratings:
                             new_ratings[name] = ratings[name]
                     ratings = new_ratings
-                lastMRSessionId = json_data["sessionId"]
-                if driverSteamId == -1:
-                    driverSteamId = json_data["driverSteamId"]
                 lastErrorTimestamp = time.time()
                 errors_in_sequence = 0
                 acdebug("helithreading::FetchPage() successful")
