@@ -1768,6 +1768,7 @@ class GenericBackend(DbSchemata):
                     for i,v in enumerate(row):
                         ban[desc[i][0].lower()] = v
                     res['bans'].append(ban)
+
             ans = c.execute("""
                 SELECT COUNT(*) FROM
                 Lap WHERE PlayerInSessionId IN
@@ -1778,6 +1779,63 @@ class GenericBackend(DbSchemata):
             else:
                 ans = ans[0]
             res['numLaps'] = ans
+
+            ans = c.execute("""
+                SELECT SUM(Length)/1000 FROM
+                Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks WHERE PlayerInSessionId IN
+                    (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid)
+            """, locals()).fetchone()
+            if ans is None:
+                ans = 0
+            else:
+                ans = ans[0]
+            res['km'] = ans
+
+            ans = c.execute("""
+                SELECT SUM(Cuts), SUM(CollisionsCar), SUM(CollisionsEnv) FROM
+                Lap WHERE PlayerInSessionId IN
+                    (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid)
+            """, locals()).fetchone()
+            if ans is None:
+                ans = [0,0,0]
+            res['numCuts'] = ans[0]
+            res['numCollisionsCar'] = ans[1]
+            res['numCollisionsEnv'] = ans[2]
+
+            days30 = unixtime_now() - 30*24*60*60
+            ans = c.execute("""
+                SELECT COUNT(*) FROM
+                Lap WHERE PlayerInSessionId IN
+                    (SELECT PlayerInSessionId FROM PlayerInSession NATURAL JOIN Session WHERE PlayerId=:playerid AND StartTimeDate>:days30)
+            """, locals()).fetchone()
+            if ans is None:
+                ans = 0
+            else:
+                ans = ans[0]
+            res['numLaps30days'] = ans
+
+            ans = c.execute("""
+                SELECT SUM(Length)/1000 FROM
+                Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks WHERE PlayerInSessionId IN
+                    (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid AND StartTimeDate>:days30)
+            """, locals()).fetchone()
+            if ans is None:
+                ans = 0
+            else:
+                ans = ans[0]
+            res['km30days'] = ans
+
+            ans = c.execute("""
+                SELECT SUM(Cuts), SUM(CollisionsCar), SUM(CollisionsEnv) FROM
+                Lap WHERE PlayerInSessionId IN
+                    (SELECT PlayerInSessionId FROM PlayerInSession NATURAL JOIN Session WHERE PlayerId=:playerid AND StartTimeDate>:days30)
+            """, locals()).fetchone()
+            if ans is None:
+                ans = [0,0,0]
+            res['numCuts30days'] = ans[0]
+            res['numCollisionsCar30days'] = ans[1]
+            res['numCollisionsEnv30days'] = ans[2]
+
             res['numPodiums'] = [None,None,None]
             for i in range(3):
                 fp = i+1
@@ -1799,6 +1857,29 @@ class GenericBackend(DbSchemata):
             else:
                 ans = ans[0]
             res['numRaces']= ans
+
+            res['numPodiums30days'] = [None,None,None]
+            for i in range(3):
+                fp = i+1
+                ans = c.execute("""
+                    SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
+                    WHERE PlayerId=:playerid AND FinishPosition=:fp AND SessionType='Race' AND StartTimeDate>:days30
+                """, locals()).fetchone()
+                if ans is None:
+                    ans = 0
+                else:
+                    ans = ans[0]
+                res['numPodiums30days'][i] = ans
+            ans = c.execute("""
+                SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
+                WHERE PlayerId=:playerid AND NOT FinishPosition IS NULL AND SessionType='Race' AND StartTimeDate>:days30
+            """, locals()).fetchone()
+            if ans is None:
+                ans = 0
+            else:
+                ans = ans[0]
+            res['numRaces30days']= ans
+
             ans = c.execute("""
                 SELECT GroupId FROM GroupEntries
                 WHERE PlayerId=:playerid

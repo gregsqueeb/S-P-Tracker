@@ -126,11 +126,34 @@ plyDetailsTemplate = SimpleTemplate("""
                     <tr><td>Steam GUID</td><td>{{ply['info']['steamguid']}}</td></tr>
                     <tr><td>Whitelisted</td><td>{{entry(ply['info']['whitelisted'])}}</td></tr>
 % end
+                </tbody>
+            </table>
+            <table class="table table-striped table-condensed table-bordered table-hover">
+                <caption>Statistics (total) </caption>
+                <tbody>
                     <tr><td>Number of server laps</td><td>{{ply['numLaps']}}</td></tr>
+                    <tr><td>Number of km</td><td>{{round(ply['km'])}}</td></tr>
+                    <tr><td>Number of cuts</td><td>{{ply['numCuts']}}</td></tr>
+                    <tr><td>Number of car/car collisions</td><td>{{ply['numCollisionsCar']}}</td></tr>
+                    <tr><td>Number of env collisions</td><td>{{ply['numCollisionsEnv']}}</td></tr>
                     <tr><td>Number of races</td><td>{{ply['numRaces']}}</td></tr>
                     <tr><td>Number of races finished first</td><td>{{ply['numPodiums'][0]}}</td></tr>
                     <tr><td>Number of races finished second</td><td>{{ply['numPodiums'][1]}}</td></tr>
                     <tr><td>Number of races finished third</td><td>{{ply['numPodiums'][2]}}</td></tr>
+                </tbody>
+            </table>
+            <table class="table table-striped table-condensed table-bordered table-hover">
+                <caption>Statistics (last 30 days) </caption>
+                <tbody>
+                    <tr><td>Number of server laps</td><td>{{ply['numLaps30days']}}</td></tr>
+                    <tr><td>Number of km</td><td>{{round(ply['km30days'])}}</td></tr>
+                    <tr><td>Number of cuts</td><td>{{ply['numCuts30days']}}</td></tr>
+                    <tr><td>Number of car/car collisions</td><td>{{ply['numCollisionsCar30days']}}</td></tr>
+                    <tr><td>Number of env collisions</td><td>{{ply['numCollisionsEnv30days']}}</td></tr>
+                    <tr><td>Number of races</td><td>{{ply['numRaces30days']}}</td></tr>
+                    <tr><td>Number of races finished first</td><td>{{ply['numPodiums30days'][0]}}</td></tr>
+                    <tr><td>Number of races finished second</td><td>{{ply['numPodiums30days'][1]}}</td></tr>
+                    <tr><td>Number of races finished third</td><td>{{ply['numPodiums30days'][2]}}</td></tr>
                 </tbody>
             </table>
         </div>
