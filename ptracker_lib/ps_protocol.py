@@ -112,7 +112,7 @@ class CompressedConnection:
 class ProtocolHandler:
 
     # protocol version
-    PROT_VERSION = 15
+    PROT_VERSION = 16
 
     # requests as seen from ptracker as client and stracker as server
     REQ_PROTO_START = 0
@@ -743,7 +743,8 @@ class ProtocolHandler:
             # - num_guids: byte
             #   for_each guid:
             #   - guid: byte[8]
-            #   - features: byte (1: name | 2: ptconn | 4: setup | 8: best_time | 16:  last_time | 32: lap_count | 64: team | 128: tyre | 256: connected | 512: currLapInvalidated
+            #   - features: byte (1: name | 2: ptconn | 4: setup | 8: best_time | 16:  last_time | 32: lap_count | 64: team | 128: tyre | 256: connected | 512: currLapInvalidated |
+            #                     1024: mr rating | 2048: server carid
             #   [ - name: string ]
             #   [ - ptconn: byte ]
             #   [ - setup: - car: string, - file: bytes]
@@ -754,6 +755,8 @@ class ProtocolHandler:
             #   [ - tyre: string ]
             #   [ - connected: int8]
             #   [ - currLapInvalidated: int8]
+            #   [ - mr rating: string ]
+            #   [ - server carId: int8 ]
             # - session_state_features: byte (1: penaltiesEnabled | 2: allowedTyresOut | 4: tyreWearFactor | 8: fuelRate | 16: damage)
             # [- penaltiesEnabled: byte]
             # [- allowedTyresOut: byte]
@@ -793,6 +796,7 @@ class ProtocolHandler:
                 if self.prot_version >= 11 and 'connected' in pi: features = features | 256
                 if self.prot_version >= 11 and 'currLapInvalidated' in pi: features = features | 512
                 if self.prot_version >= 15 and 'mr_rating' in pi: features = features | 1024
+                if self.prot_version >= 16 and 'carid' in pi: features = features | 2048
                 if self.prot_version >= 11:
                     packed += struct.pack('<QH', int(guid), features)
                 else:
@@ -808,8 +812,8 @@ class ProtocolHandler:
                 if features & 128: packed += self._pack_string(pi['tyre'])
                 if features & 256: packed += struct.pack('<b', pi['connected'])
                 if features & 512: packed += struct.pack('<b', pi['currLapInvalidated'])
-                if features & 1024:
-                    packed += self._pack_string(pi['mr_rating'])
+                if features & 1024: packed += self._pack_string(pi['mr_rating'])
+                if features & 2048: packed += struct.pack('<b', pi['carid'])
             features = 0
             if 'penaltiesEnabled' in session_state: features = features | 1
             if 'allowedTyresOut' in session_state: features = features | 2
@@ -1147,6 +1151,7 @@ class ProtocolHandler:
             #   for_each guid:
             #   - guid: byte[8]
             #   - features: byte (1: name | 2: ptconn | 4: setup | 8: best_time | 16:  last_time | 32: lap_count | 64: team | 128: tyre | 256: connected | 512: currLapInvalidated
+            #                     1024: mr rating | 2048: carid
             #   [ - name: string ]
             #   [ - ptconn: byte ]
             #   [ - setup: - car: string, - file: bytes]
@@ -1157,6 +1162,8 @@ class ProtocolHandler:
             #   [ - tyre: string ]
             #   [ - connected: int8]
             #   [ - currLapInvalidated: int8]
+            #   [ - mr rating: string ]
+            #   [ - carid: int8 ]
             # - session_state_features: byte (1: penaltiesEnabled | 2: allowedTyresOut | 4: tyreWearFactor | 8: fuelRate | 16: damage)
             # [- penaltiesEnabled: byte]
             # [- allowedTyresOut: byte]
@@ -1193,8 +1200,8 @@ class ProtocolHandler:
                 if features & 128: r['tyre'] = self._unpack_string()
                 if self.prot_version >= 11 and features & 256: r['connected'], = self._unpack_from_format('<b')
                 if self.prot_version >= 11 and features & 512: r['currLapInvalidated'], = self._unpack_from_format('<b')
-                if self.prot_version >= 15 and features & 1024:
-                    r['mr_rating'] = self._unpack_string()
+                if self.prot_version >= 15 and features & 1024: r['mr_rating'] = self._unpack_string()
+                if self.prot_version >= 16 and features & 2048: r['carid'], = self._unpack_from_format('<b')
                 pti.append(r)
             features, = self._unpack_from_format('<b')
             if features & 1 : session_state['penaltiesEnabled'], = self._unpack_from_format('<b')

@@ -28,14 +28,9 @@ name_queries = {}
 urlstrtemplate = 'http://app.minorating.com:806/minodata/drivers/?serverIp={}&serverPort={}'
 urlstr = ""
 
-def initConstants():
-    pass
-
 def requestMinoratingData(name):
     global requestPending, urlstr, name_queries
     curr_t = time.time()
-    if carModel == "":
-        initConstants()
     min_delay = 10
     if errors_in_sequence > 2:
         min_delay = 20

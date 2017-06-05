@@ -1021,6 +1021,19 @@ class PersonalHotlaps:
                         curr = currSplits[sectorIndex]
                 self.splitComparison = calc_comparison(curr, best, "Split %d" % (sectorIndex+1))
 
+    def getLocalIdFromServerId(self, serverid):
+        if serverid is None or serverid < 0:
+            return None
+        guid = self.guid()
+        egoServerCarId = self.serverData.get(guid, {}).get('carid', None)
+        if not egoServerCarId is None:
+            if serverid == egoServerCarId:
+                return 0
+            if serverid < egoServerCarId:
+                return serverid + 1
+            return serverid
+        return None
+
     def updateServerData(self):
         if self.ptClient is None:
             return
@@ -1045,18 +1058,27 @@ class PersonalHotlaps:
                 self.serverData[guid]['tyre'] = r.get('tyre', "")
                 self.serverData[guid]['ptracker_conn'] = r['ptracker_conn']
                 self.serverData[guid]['mr_rating'] = r.get('mr_rating', None)
+                self.serverData[guid]['server_carid'] = r.get('carid', None)
                 if 'connected' in r:
                     self.serverData[guid]['connected'] = r['connected']
-                found = False
-                #acdebug("SD[GUID %s] = %s", guid, self.serverData[guid])
-                for lc in self.lapCollectors:
-                    if lc.name == r['name'] and lc.connected:
-                        acdebug("found lap collector matching server guid (%s : %s)", lc.name, guid)
-                        lc.server_guid = guid
-                        found = True
-                    elif lc.server_guid == guid and lc.name != r['name']:
-                        lc.server_guid = None
-                if not found: acdebug("could not find matching lap collector for name %s, guid %s", r['name'], guid)
+                local_carid = self.getLocalIdFromServerId(self.serverData[guid].get('server_carid', None))
+                if local_carid is None:
+                    found = False
+                    #acdebug("SD[GUID %s] = %s", guid, self.serverData[guid])
+                    for lc in self.lapCollectors:
+                        if lc.name == r['name'] and lc.connected:
+                            acdebug("found lap collector matching server guid (%s : %s)", lc.name, guid)
+                            found = True
+                            local_carid = lc.carId
+                        elif lc.server_guid == guid and lc.name != r['name']:
+                            lc.server_guid = None
+                    if not found: acdebug("could not find matching lap collector for name %s, guid %s", r['name'], guid)
+                self.serverData[guid]['local_carid'] = local_carid
+                if not local_carid is None:
+                    lc = self.lapCollectors[local_carid]
+                    if lc.name != self.serverData[guid]['name']:
+                        acwarning("name mismatch for localid=%d (serverid=%d): %s != %s", local_carid, serverData[guid]['server_carid'], lc.name, self.serverData[guid]['name'])
+                    lc.server_guid = guid
                 if 'setup' in r:
                     if not 'setup' in self.serverData[guid]:
                         self.addMessage(text="%s has sent you his setup" % r['name'],

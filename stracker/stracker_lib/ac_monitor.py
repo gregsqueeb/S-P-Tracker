@@ -608,7 +608,6 @@ class AllDrivers:
                 res.append(p[0])
             return res
 
-
     def setupNewSession(self):
         newDrivers = []
         for d in self.drivers:
@@ -887,6 +886,7 @@ class ACMonitor:
             r['currLapInvalidated'] = pl.currLapInvalidated
             r['connected'] = pl.carId >= 0
             r['mr_rating'] = pl.minorating
+            r['carid'] = pl.carId
             # check for connection
             if not pl.ptracker_conn is None:
                 conn = pl.ptracker_conn
@@ -1000,7 +1000,7 @@ class ACMonitor:
 
     @acquire_lock
     def calc_positions(self, quiet=False):
-        players = self.allDrivers.filterForClassification()
+        players = self.allDrivers.filterForClassification(self.currentSession.sessionType)
         ply_sorted = sorted(players,
                             key=functools.cmp_to_key(functools.partial(self.cmp_ply_final_position,
                                                      isRace=self.currentSession.sessionType == stracker_udp_plugin.SESST_RACE)))
