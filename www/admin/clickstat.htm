@@ -1,0 +1,22 @@
+<!-- title="click stat" nav="clickstat" index=2 sections=auto -->
+
+<div>
+% import psycopg2
+% db = psycopg2.connect(database="wwwdb")
+    <table class="table table-condensed">
+        <thead>
+            <th>Page</th>
+            <th>Number of clicks</th>
+        </thead>
+        <tbody>
+% c = db.cursor()
+% c.execute("SELECT NumClicks,Name FROM Clicks WHERE RIGHT(Name,3) NOT IN ('png', 'php', 'css', '.js', 'txt', 'ico') AND LEFT(Name, 10) NOT IN ('/bootstrap')  ORDER BY NumClicks DESC")
+% for r in c.fetchall():
+            <tr>
+                <td>{{r[1]}}</td>
+                <td>{{r[0]}}</td>
+            </tr>
+% end
+        </tbody>
+    </table>
+</div>

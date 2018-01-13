@@ -1,0 +1,12 @@
+<!-- title="www memory" nav="wwwstat" index=1 sections=auto -->
+
+<div>
+% from pympler import muppy, summary
+% s = summary.summarize(muppy.get_objects())
+<pre>
+% for l in summary.format_(s):
+{{l}}
+% end
+</pre>
+
+</div>

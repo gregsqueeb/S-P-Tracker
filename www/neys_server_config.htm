@@ -1,0 +1,99 @@
+<!-- title="Example server configuration" nav="Config example" index=5 sections=auto -->
+
+<div>
+% from glob import glob
+% import os.path
+% dir = "/home/acserver"
+% #dir = r"D:\AC_dev\n-e-y-s\backup\home_acserver\acserver"
+% files = [
+%   ("cfg0", None, lambda d: glob(os.path.join(d, "*.ini"))+glob(os.path.join(d, "*.config")), "Directory containing all configuration files related to first server"),
+%   ("cfg1", None, lambda d: glob(os.path.join(d, "*.ini"))+glob(os.path.join(d, "*.config")), "Directory containing all configutation files related to second server"),
+%   ("acserver", None, [], "Directory containing the AC server package (without the corresponding config files)"),
+%   ("stracker", None, [], "Directory containing the stracker package"),
+%   ("minorating", None, [], "Directory containing the minorating package"),
+%   ("logs", "*.log", [] ,"Directory containing log files"),
+%   ("start.sh", None, None, "Start script (linux specific)"),
+%   ("stop.sh", None, None, "Stop script (linux specific)"),
+% ]
+%
+% def replace_passwords_and_ports(x):
+%    import re
+%    res,c = re.subn(r'([^=\n]*((PASSWORD)|(_PWD)|(_USER)|(LOGIN))[^=\n]*)=([^\n]*)', r'\1=XXX', x, flags=re.IGNORECASE)
+%    res,c = re.subn(r'(<add\s+key="server_trust_token"\s+value=)("[0-9A-Fa-f-]+")(/>)', r'\1"00000000-1111-2222-3333-444444444444"\3', res, flags=re.IGNORECASE)
+%    port_repl = lambda M: "%s=%d" % (M.group(1), int(M.group(6)) + 12300)
+%    res,c = re.subn(r'([^=\n]*((UDP_PORT)|(TCP_PORT)|(HTTP_PORT))[^=\n]*)=\s*([0-9]*)', port_repl, res, flags=re.IGNORECASE)
+%    return res
+% end
+% 
+% content_cnt = 0
+% def show_item(abspath, desc=None, level=0, show_content=False):
+%   global content_cnt
+%   content_cnt += 1
+%   f = os.path.split(abspath)[1]
+%   isdir = os.path.isdir(abspath)
+%   indent = "&#160;"*(4*level)
+        <tr>
+%   if isdir:
+            <td>
+                {{!indent}}<span class="glyphicon glyphicon-folder-open"> {{f}}</span>
+            </td>
+            <td>
+                {{desc if not desc is None else ""}}
+            </td>
+%   else:
+            <td>
+                {{!indent}}<span class="glyphicon glyphicon-file"> {{f}}</span>
+            </td>
+            <td>
+%     if not show_content:
+                {{desc if not desc is None else ""}}
+%     else:
+%       accid = "accordion%d" % content_cnt
+%       contid = "content%d" % content_cnt
+                <div class="panel-group" id="{{!accid}}">
+                    <div class="panel-header">
+                        <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#{{!accid}}" href="#{{!contid}}">
+                            File Contents
+                        </a>
+                    </div>
+                    <div id="{{!contid}}" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <pre>
+{{replace_passwords_and_ports(open(abspath).read())}}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+%     end
+            </td>
+%   end
+        </tr>
+%   return isdir
+% end
+%
+<table class="table">
+    <tbody>
+% for f,filter,content,desc in files:
+%   af = os.path.join(dir, f)
+%   if show_item(af, desc=desc, show_content=os.path.isfile(af)):
+%     if callable(content):
+%       content = content(af)
+%     end
+%     if filter is None: 
+%       content_files = [os.path.join(af, x) for x in os.listdir(af)]
+%     else: 
+%       content_files = glob(af + "/" + filter)
+%     end
+%     dir_content = sorted(content_files)
+%     for cf in dir_content:
+%       show_content=False
+%       if cf in content:
+%         show_content=True
+%       end
+%       show_item(os.path.join(af, cf), level=1, show_content=show_content)
+%     end
+%   end
+% end
+    </tbody>
+</table>
+</div>

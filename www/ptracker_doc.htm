@@ -1,0 +1,363 @@
+<!-- title="PT Doc" nav="ptracker Manual" index=2 sections=auto -->
+
+<div>
+    <h1>ptracker Documentation</h1>
+    <h2>Installation</h2>
+    <p>Since ptracker 3.2.x there is an installer to easily install ptracker. Just execute the installer,
+    and make sure the correct AC installation dir is selected in the installer window.</p>
+    <p>
+       Apps must be enabled after installing in the AC launcher under Options->General->UI Modules. 
+       Just check the ptracker app and afterwards you'll find the "PT" icon in the game's side bar.
+    </p>
+    <h2>FAQ</h2>
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse0_1">
+                        I have installed steam in a custom directory and the installer of 3.2.9 does not work. How
+                        can I install ptracker?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse0_1" class="panel-collapse collapse">
+                <div class="panel-body">
+                    The installer is a little buggy when the given AC directory is wrong. You will have to click away
+                    some message boxes (just press OK). After you see the installer window, click on browse and 
+                    navigate to the AC installation directory (the directory containing AssettoCorsa.exe). 
+                    You might have to click more messages boxes away. After selecting the correct directory, press Install.
+                    <br>
+                    If you really do not like to use the installer, you can use 7z to extract the contents of the .exe
+                    installer. The contents will end up in some funny directories, but you will see which files to copy 
+                    where.
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse0">
+                        Does setup sharing really work?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse0" class="panel-collapse collapse">
+                <div class="panel-body">
+                    Yes it does with versions >= 3.1.x. Unfortunately KS has removed the information about loading and storing setups
+                    from their logs (starting with the 1.3.x versions). So I was forced to seek for a different
+                    solution. This requires to load a .dll which depends on the 
+                    <a href="https://www.microsoft.com/en-US/download/details.aspx?id=48145">Microsoft Redistributables 2015</a>
+                    package. You might have to install it (ptracker sends a message if this is necessary). I tried to avoid that
+                    step, but it seemed to be impossible with the new VS 2015 version. If anyone has suggestions on how to 
+                    deploy these together with the app, feel free to contact me.
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse2">
+                        What do I need to do to get working splits in multiplayer?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse2" class="panel-collapse collapse">
+                <div class="panel-body">
+                    Have a clean lap in single player (e.g., hotlap mode) on the track. It doesn't matter which car. 
+                    After that, ptracker is able to calculate "soft-splits", as a workaround for a bug in the 
+                    current (0.22) AC API. Honestly, I didn't expect that this would still be true in AC 1.3.4...
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse3">
+                        Where is my setup after I received a setup from another player?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse3" class="panel-collapse collapse">
+                <div class="panel-body">
+                    It is in the standard location. AC needs an update trigger, so just click once on the track name in the 
+                    setup I/O page, and you should see the setup named &lt;sender&gt;_&lt;counter&gt;
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse5">
+                        Does ptracker or stracker store my setups?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse5" class="panel-collapse collapse">
+                <div class="panel-body">
+                    No. Your setups are private and you have full control over it. If you do not send a set to someone else, 
+                    your set stays on your computer. If you send a set to someone, stracker will forward it and delete it 
+                    immediately after it has been delivered. <br>
+                    The obvious exception is when you use stracker's setup deposit. In this case, the set is stored in the server's
+                    database.
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse6">
+                        I have opened the statistics window with a double click on the ptracker app. How can I close it?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse6" class="panel-collapse collapse">
+                <div class="panel-body">
+                    Click on the "AC" icon in the upper left corner.
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse7">
+                        Ptracker timing doesn't work on Nordschleife Tourist, Trento-Bondone or other A-&gt;B tracks. Can you fix this?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse7" class="panel-collapse collapse">
+                <div class="panel-body">
+                    This is too difficult in the current state of the AC API. There are already many many workarounds in the timing module
+                    for unexpected behaviour of the AC API functions and supporting A/B tracks would be too much effort.
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse99">
+                        Ptracker doesn't work for some reason. What can I do?
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse99" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <ol>
+                        <li>Check if it is a false alarm of your virus scanner software. Temporarily disable it and
+                        try if ptracker works. If it does, choose another scanner or report the false positive to
+                        the scanner authors. I use <a href="http://www.virustotal.com">www.virustotal.com</a>
+                        to check that the ptracker.exe file has no false positives. Though they have a lot of scanners,
+                        I think the list is not complete.
+                        </li>
+                        <li>If you are using Windows Defender, you might need to add an exception.
+                            <a href="http://www.assettocorsa.net/forum/index.php?threads/ptracker-stracker-v3-1-stracker-live-map-re-implement-setup-exchanging.13169/page-126#post-656648">Here</a> 
+                        are some screenshots of a russian windows version, but you will get the point</li>
+                        <li>Check that the file {{r"C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa\apps\python\ptracker\dist\ptracker.exe"}}
+                        exists, and try to execute it with a double click. A message window saying that ptracker-server-dist returned -1 is normal, 
+                        all other behaviours are unnormal and might be caused by your AV software</li>
+                        <li>One guy solved his problems by copying the file MSVCR100.dll from {{r"C:\Windows\System32"}} to {{r"C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa\apps\python\ptracker\dist"}}</li>
+                        <li>Completely remove the directory 
+                        <code>{{r"C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa\apps\python\ptracker"}}</code> 
+                        and install ptracker again.
+                        </li>
+                        <li>Completely remove the directory <code>{{r"<my documents>/plugins/ptracker"}}</code>. Note that this will 
+                        delete your local lap database.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h2>Change Log</h2>
+    <h3>From 3.2.x to 3.3.x</h3>
+        <ul>
+            <li>add support for timed races</li>
+            <li>add possibility to display minorating grades (needs to be enabled in config dialog)</li>
+            <li>display delta as 1 L if more than a lap behind</li>
+            <li>integrate assist icon update from AC forum user @Laurent81 (thanks a lot)</li>
+            <li>use "new" API function for querying tyre compound, data from stracker is not needed anymore</li>
+            <li>add tyre images for q, v70 and v78 short names</li>
+        </ul>
+    <h3>From 3.1.x to 3.2.x</h3>
+        <h4>Highlights</h4>
+        <ul>
+        <li>statistics browsing in ptracker is now much more fun due to integrated browser.
+            <ul><li>The local stats can now be as easily accessed as the server stats.</li>
+                <li>Server stat pages are directly generated from the server with same look and feel</li>
+                <li>Remote browsing works only with stracker versions >= 3.2.1</li>
+            </ul>
+        <li>Add support for point to point tracks. Tracks must include the tag "A2B" in track_ui.json</li>
+        <li>spectating a different car now changes the leaderboard focus as well</li>
+        <li>click on leaderboard row to kick/ban/chat/send set/set focus</li>
+        <li>auto-login as admin if player is in stracker group 'admins'</li>
+        <li>implement configurable interval for live delta calculation</li>
+        <li>replay mode, still some limitations here:
+            <ul><li>works only for races (even in qualy replays, ptracker will assume a race session</li>
+                <li>seeking in replay files is not supported and will confuse the ptracker leaderboard</li>
+                <li>this might be helping for broadcasts with steam; please report back if not</li>
+            </ul></li>
+        <li>introduce chat filtering by configurable regular expressions (try: (PLP)|(TCD))</li>
+        <li>introduce new options in config dialog:
+            <ul><li>"Lap times in race mode" can now be set to last laps, meaning that always the last laps times are displayed</li>
+            <li>"Race delta reference" chooses the reference of the delta times. Can be ego (= ego car or spectated car) or leader</li>
+            <li>"Delta coloring" set the columns where the red/green colors of the delta's are applied</li>
+            <li>"Show cars based on track pos" (default: next and last car)</li>
+            <li>"Colorize drivers around you" (default: True)</li>
+            <li>"Show driver status" (default: True)</li>
+            </ul></li>
+        </ul>
+
+        <h4>Changes / New Features</h4>
+        <ul>
+        <li>ptracker comes now with an installer. Execute the .exe and you will be guided through the installation. The MSVC 2015 redistributables should be installed automatically if needed. 
+            A small test is performed to check for virus scanner problems on this PC.</li>
+        <li>Fuel display can now be changed by clicking on the fuel icon</li>
+        <li>display lap invalidates caused by stracker (collisions) in ptracker validity display</li>
+        <li>display not connected cars in gray</li>
+        <li>clean up setup dialog (only display connected drivers, do not show kick/ban buttons anymore; they are now available by clicking on a drivers name in the leaderboard)</li>
+        <li>better error messages in-game when ptracker.exe cannot be run</li>
+        <li>prefix auto saved setups with the track configuration</li>
+        <li>lap times are colored according to session best, personal session best or normal, if laptime mode is set to 'last laps'</li>
+        <li>checkered flag display for drivers finished the race</li>
+        <li>add display of arrows to indicate which cars are directly in front / behind you on track</li>
+        <li>add in-game icons for dialogs, change main ptracker icon</li>
+        <li>use new python functions isCarInPitlane / isCarInPit instead of pit limiter stuff</li>
+        <li>add ballast information (from AC python API)</li>
+        <li>use new assist controls from sim_info and discard option parsing where possible; 
+            ideal line and auto-shift assists are now dynamic. <b>Note</b>: there seems to be something
+            wrong with the autoclutch value delivered by AC.</li>
+        <li>Refactoring of ptracker's timing scheme (needed for the A2B track support). Please report any issues!</li>
+        </ul>
+
+        <h4>Fixes</h4>
+        <ul>
+        <li>fix disable hotlap line option (do not display frame anymore, and avoid errorneous display of the delta label)</li>
+        <li>Fix framerate problems/microstuttering occuring mostly on Nordschleife with many cars.</li>
+        <li>correctly restore position of msg window even when it is placed at lower right</li>
+        <li>try harder to find a valid delta lap, consider also laps which are not the all-time best lap times of the combo</li>
+        <li>In Session Stat display, display all recorded sessions, not just multiplayer sessions</li>
+        <li>avoid timeouts when database migration is ongoing and lasts for a long time. Display a message to the user</li>
+        <li>fix db compression</li>
+        <li>remove pin hack, since this is not needed anymore since AC 1.6</li>
+        </ul>
+    
+    <h3>Last experimental versions</h3>
+    <h4>Version 3.4.0</h4>
+    <ul>
+         <li>apply new API for getting MR grades</li>
+         <li>distinguish icons for MR-A (light green) and MR-B (dark green)</li>
+         <li>do not depend on the player name anymore to identify an stracker driver with a ptracker driver (experimental, changed client-server protocol); 
+             there should be no issues anymore with kicking/banning drivers with weird character names</li>
+    </ul>
+    <h4>Version 3.3.6</h4>
+    <ul>
+         <li>Fix the setup sharing / autosave issue that appeared with AC version 1.13</li>
+    </ul>
+    <h4>Version 3.3.5</h4>
+    <ul>
+         <li>integrate assist icon update from AC forum user @Laurent81 (thanks a lot)</li>
+    </ul>
+    <h4>Version 3.3.4</h4>
+    <ul>
+        <li>display delta as 1L if more than a lap behind (rather than giving 99:99 seconds)</li>
+        <li>add support for timed races (the extra lap is not fully supported, there might be some issues with that)</li>
+        <li>do not show countdown anymore when red lights are on (for timed races)</li>
+    </ul>
+    <h4>Version 3.3.2</h4>
+    <ul>
+        <li>ptracker now optionally displays Minorating grades (thanks to Minolin for permission and support!). Default for this 
+            option is "off". 
+            As of now, there are two basic strategies to get the grades: 
+                <ul><li>First one is to use the same API as helicorsa; this is used
+                        on non-stracker servers or on stracker servers with pre 3.3.2 versions. </li>
+                    <li>Second one is to use the grades transferred
+                        from stracker to ptracker (works only for stracker versions >= 3.3.2). </li>
+                </ul>
+            The second one seems to be more robust than the first one (it is a known issue that it doesn't work sometimes). You have 
+            to explicitely enable the feature in the configuration dialog.
+        </li>
+    </ul>
+    <h3>From 3.0.x to 3.1.x</h3>
+    <ul>
+        <li>better debugging possibilities for problems when launching ptracker-server.py</li>
+        <li>replace pysqlite3 module by apsw (big change - I hope this will be working!)</li>
+        <li>new tyre images (better visual colors)</li>
+        <li>fix for A->B track caused division by zero</li>
+        <li>loading and saving setups is now detected again (you might need to install the 
+            <a href="https://www.microsoft.com/en-US/download/details.aspx?id=48145">Microsoft Redistributables 2015</a>)</li>
+            <ul><li>sharing setups shall now work again</li>
+                <li>autosave pb setups shall also work again</li>
+                <li>provide a local message when a set is changed</li>
+            </ul>
+        <li>add option for detaching the message window from ptracker (default: off)</li>
+        <li>add option for increasing the width of the message window</li>
+        <li>add option for display lap times as delta (default: off)</li>
+        <li>add fuel information to hotlap line (icon / laps remaining / amount of refuel needed)</li>
+               <ul><li>based on last session where fuel consumption is detectable (>= 2 laps)</li>
+                   <li>fuel icon becomes yellow when only 3 laps left</li>
+                   <li>fuel icon blinks red when only 1 lap left</li>
+               </ul>
+        <li>numberOfTyresOut limit is now configurable in stracker.ini (default is to use either server's penalty setting, if enabled or 2)</li>
+        <li>new client server protocol version 10 (minor changes)</li>
+        <li>new db schema version 21</li>
+    </ul>
+    <h3>From 2.8.x to 3.0.x</h3>
+    <ul>
+        <li>add display of tyre type in leaderboard (configurable, default on)</li>
+        <li>add display of number of laps in leaderboard (configurable, default off)</li>
+        <li>add display of team in leaderboard (configurable, default off)</li>
+        <li>optimize the stracker/ptracker protocol</li>
+        <li>upgrade to sqlite 3.08.11.1 for better performance</li>
+        <li>new database version 20</li>
+        <li>64 bit support</li>
+        <li>optimize first-time query of lap times (this was very slow on larger databases)</li>
+        <li>fix ban/kick heuristics</li>
+        <li>fix best lap display in case of no stracker connection</li>
+    </ul>
+    <h3>From 2.7.x to 2.8.x</h3>
+    <ul>
+        <li>new database version 19</li>
+        <li>ptracker is now executing itself in a seperate process resulting in much better (and constant) FPS</li>
+        <li>Like RSR, ptracker automatically spawns an .exe file from now on</li>
+        <li>configurable FPS mode: PREFER_HIGH_FPS (default) vs. PREFER_ACCURACY</li>
+        <li>fix ptracker dialog size setting</li>
+        <li>remove delay when connecting to a server without stracker running</li>
+        <li>change connection icon when connection is in progress</li>
+        <li>fix number of laps displayed in statistics view</li>
+        <li>scroll back feature (message board history), accessable with Alt+CursorUp/Alt+CursorDown</li>
+        <li>nicer configuration dialog for message event sounds</li>
+        <li>display complete leaderboard at race start</li>
+    </ul>
+    <h3>From 2.6.x to 2.7.x</h3>
+    <ul>    
+        <li>introduce message sounds (customizable)</li>
+        <li>introduce integrated chat application with customizable hotkeys; chatting is now kind of fun ...</li>
+        <li>fix configuration options (enabling / disabling items) for hotlap line</li>
+        <li>automatically split long messages into multiple lines</li>
+        <li>fix setup saving for tracks with configurations (the track directory is now displayed in the message as well)</li>
+        <li>gui: add zoom functionality (for high res / low res displays)</li>
+        <li>add reconnection possibility to stracker (automatic and manual)</li>
+        <li>provide warning if in game app overlapping is disabled</li>
+        <li>fix error when trying to store non-existing setup in server's deposit</li>
+        <li>changed default values for some config settings:</li>
+            <ul><li>lap time mode is now "all" instead "fastest only"</li>
+                <li>message display time is now 20s instead of 10s</li>
+            </ul>
+    </ul>
+    <h3>To 2.6.x</h3>
+    <ul>
+        <li>new database version: 17 (rename all existing references to vallelunga and vallelunga-club to new naming scheme, no changes in the database schema itself)</li>
+        <li>support track configurations (tracks are now called <trackname>-<trackconfig>, if they have a track configuration)</li>
+        <li>add support for using the AC server's TCP port + 42 as stracker connection port</li>
+        <li>new graphical user interface</li>
+            <ul><li>changed layout of hotlap line (comparison bases are now shown above of delta times)</li>
+                <li>provide a button in config dialog for reverting to default settings</li>
+                <li>display badge icons in leaderboard</li>
+                <li>provide a button in config dialog for FPS-optimized settings</li>
+                <li>remove the hotlap screen (replaced by the qualification screen)</li>
+                <li>add option for limit name lengths in leaderboards to a specific number of characters</li>
+                <li>change the default color for pit time display to make it better readable on a blue background</li>
+                <li>changed default settings for some options (most important: vertical alignment)</li>
+            </ul>
+        <li>log usage of ESC key in database (for clients running ptracker) and include this info in the lap time information of sessions</li>
+    </ul>
+</div>
