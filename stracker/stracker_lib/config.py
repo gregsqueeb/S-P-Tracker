@@ -217,7 +217,7 @@ class Config:
             'ssl_private_key' : ('', conf.get, 'Path to the SSL private key for https. Only used when ssl is True. A private key can be generated with "openssl genrsa -out privkey.pem 2048"'),
         }
         self.sections['BLACKLIST'] = {
-            'blacklist_file' : ('', conf.get, 'Path to blacklist.txt of ac server. If empty, blacklist support will not be available. Changes to blacklist file require an AC server restart to be active.'),
+            'blacklist_file' : ('', conf.get, 'Deprecated: it is generally better to use the authentication instead. Syncing the blacklist file has some issues in some scenarios.'),
         }
         self.sections['WELCOME_MSG'] = {
             'line1' : ('Welcome to stracker %(version)s', conf.get, 'First line of welcome message text (if not empty, this text is sent a player when he enters the server'),

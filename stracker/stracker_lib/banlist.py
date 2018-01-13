@@ -28,6 +28,7 @@ class BanListHandler:
         self.udp_plugin = udp_plugin
         self.blpath = config.config.BLACKLIST.blacklist_file
         if self.blpath != "":
+            acwarning("Using a blacklist file is deprecated and should be replaced by authentication.")
             self.blacklisted_guids = set()
             self.import_blacklist()
             if self.blacklisted_guids is None:
