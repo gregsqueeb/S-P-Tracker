@@ -132,7 +132,7 @@ plyDetailsTemplate = SimpleTemplate("""
                 <caption>Statistics (total) </caption>
                 <tbody>
                     <tr><td>Number of server laps</td><td>{{ply['numLaps']}}</td></tr>
-                    <tr><td>Number of km</td><td>{{round(ply['km'])}}</td></tr>
+                    <tr><td>Number of km</td><td>{{round(ply['km']) if not ply['km'] is None else '-'}}</td></tr>
                     <tr><td>Number of cuts</td><td>{{ply['numCuts']}}</td></tr>
                     <tr><td>Number of car/car collisions</td><td>{{ply['numCollisionsCar']}}</td></tr>
                     <tr><td>Number of env collisions</td><td>{{ply['numCollisionsEnv']}}</td></tr>
@@ -146,7 +146,7 @@ plyDetailsTemplate = SimpleTemplate("""
                 <caption>Statistics (last 30 days) </caption>
                 <tbody>
                     <tr><td>Number of server laps</td><td>{{ply['numLaps30days']}}</td></tr>
-                    <tr><td>Number of km</td><td>{{round(ply['km30days'])}}</td></tr>
+                    <tr><td>Number of km</td><td>{{round(ply['km30days']) if not ply['km30days'] is None else '-'}}</td></tr>
                     <tr><td>Number of cuts</td><td>{{ply['numCuts30days']}}</td></tr>
                     <tr><td>Number of car/car collisions</td><td>{{ply['numCollisionsCar30days']}}</td></tr>
                     <tr><td>Number of env collisions</td><td>{{ply['numCollisionsEnv30days']}}</td></tr>
