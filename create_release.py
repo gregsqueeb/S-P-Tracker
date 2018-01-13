@@ -38,7 +38,7 @@ if "--ptracker_only" in sys.argv:
 
 stracker_only = False
 if "--stracker_only" in sys.argv:
-    sys.argv.remove('-stracker_only')
+    sys.argv.remove('--stracker_only')
     stracker_only = True
     test_release_process = True
 
@@ -53,7 +53,7 @@ if "--linux_only" in sys.argv:
     sys.argv.remove('--linux_only')
     linux_only = True
     test_release_process = True
-    
+
 windows_only = False
 if "--windows_only" in sys.argv:
     sys.argv.remove('--windows_only')
@@ -87,7 +87,7 @@ if not stracker_only and not linux_only:
 
     if not test_release_process:
         git_status = subprocess.check_output([git, "status", "-s", "-uno"], universal_newlines=True)
-        if not git_status.strip() == "":    
+        if not git_status.strip() == "":
             svn_commit = subprocess.check_output([git, "commit", "-a", "-s", "-m", "prepare release %s" % version])
 
     ptracker_py_files = """\
@@ -244,7 +244,7 @@ if not ptracker_only:
         shutil.rmtree('dist')
 
     r = zipfile.ZipFile("../versions/stracker-V%s.zip" % version, "w")
-    
+
     if not linux_only and not stracker_packager_only:
         print("------------------- Building stracker.exe -------------------------------")
         assert 0 == os.system("pyinstaller --name stracker --clean -y --onefile --exclude-module http_templates --hidden-import cherrypy.wsgiserver.wsgiserver3 --hidden-import psycopg2 --additional-hooks-dir=pyinstaller-hooks\ --path .. --path externals stracker.py")
@@ -254,7 +254,7 @@ if not ptracker_only:
         os.system(r"dist\stracker.exe --stracker_ini stracker-default.ini 2>null")
         r.write("dist/stracker.exe", "stracker.exe")
         r.write("stracker-default.ini", "stracker-default.ini")
-        
+
     if not linux_only and not stracker_only:
         print("------------------- Building stracker-packager.exe ----------------------")
         assert 0 == os.system("pyinstaller --clean -y --onefile --path .. --path externals stracker-packager.py")
