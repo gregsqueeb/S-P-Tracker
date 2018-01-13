@@ -1775,7 +1775,7 @@ class GenericBackend(DbSchemata):
             c = self.db.cursor()
             c.execute("DELETE FROM SetupDeposit WHERE SetupId=:setupid and PlayerId IN (SELECT PlayerId FROM Players WHERE SteamGuid=:guid)", locals())
 
-    def playerDetails(self, playerid = None, guid = None):
+    def playerDetails(self, playerid = None, guid = None, include_km = False):
         with self.db:
             c = self.db.cursor()
             if not playerid is None:
@@ -1783,14 +1783,24 @@ class GenericBackend(DbSchemata):
             else:
                 plyCond = " WHERE SteamGUID=:guid"
             res = {}
-            ans = c.execute("SELECT * FROM Players %(plyCond)s"%locals(), locals()).fetchone()
+            if 0:
+                def c_execute(*args, **kw):
+                    acdebug("Executing SQL:\n        %s", args[0].replace("\n", "\n        "))
+                    t = time.time()
+                    res = c.execute(*args, **kw)
+                    t = time.time() - t
+                    acdebug("Profiling result: %dm %.1fs" % (t // 60., t % 60.))
+                    return res
+            else:
+                c_execute = c.execute
+            ans = c_execute("SELECT * FROM Players %(plyCond)s"%locals(), locals()).fetchone()
             playerInfo = {}
             for i,v in enumerate(ans):
                 playerInfo[c.description[i][0].lower()] = v
             playerid = playerInfo['playerid']
             guid = playerInfo['steamguid']
             res['info'] = playerInfo
-            ans = c.execute("SELECT * FROM Blacklist WHERE PlayerId=:playerid ORDER BY DateAdded DESC", locals())
+            ans = c_execute("SELECT * FROM Blacklist WHERE PlayerId=:playerid ORDER BY DateAdded DESC", locals())
             desc = c.description
             ans = ans.fetchall()
             res['bans'] = []
@@ -1800,8 +1810,7 @@ class GenericBackend(DbSchemata):
                     for i,v in enumerate(row):
                         ban[desc[i][0].lower()] = v
                     res['bans'].append(ban)
-
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT COUNT(*) FROM
                 Lap WHERE PlayerInSessionId IN
                     (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid)
@@ -1812,18 +1821,21 @@ class GenericBackend(DbSchemata):
                 ans = ans[0]
             res['numLaps'] = ans
 
-            ans = c.execute("""
-                SELECT SUM(Length)/1000 FROM
-                Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks WHERE PlayerInSessionId IN
-                    (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid)
-            """, locals()).fetchone()
-            if ans is None:
-                ans = 0
+            if include_km:
+                ans = c_execute("""
+                    SELECT SUM(Length)/1000 FROM
+                    Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks
+                        WHERE PlayerId=:playerid
+                """, locals()).fetchone()
+                if ans is None:
+                    ans = 0
+                else:
+                    ans = ans[0]
+                res['km'] = ans
             else:
-                ans = ans[0]
-            res['km'] = ans
+                res['km'] = None # query takes a very long time
 
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT SUM(Cuts), SUM(CollisionsCar), SUM(CollisionsEnv) FROM
                 Lap WHERE PlayerInSessionId IN
                     (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid)
@@ -1835,7 +1847,7 @@ class GenericBackend(DbSchemata):
             res['numCollisionsEnv'] = ans[2]
 
             days30 = unixtime_now() - 30*24*60*60
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT COUNT(*) FROM
                 Lap WHERE PlayerInSessionId IN
                     (SELECT PlayerInSessionId FROM PlayerInSession NATURAL JOIN Session WHERE PlayerId=:playerid AND StartTimeDate>:days30)
@@ -1846,10 +1858,10 @@ class GenericBackend(DbSchemata):
                 ans = ans[0]
             res['numLaps30days'] = ans
 
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT SUM(Length)/1000 FROM
-                Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks WHERE PlayerInSessionId IN
-                    (SELECT PlayerInSessionId FROM PlayerInSession WHERE PlayerId=:playerid AND StartTimeDate>:days30)
+                Lap NATURAL JOIN PlayerInSession NATURAL JOIN Session NATURAL JOIN Tracks WHERE
+                    PlayerId=:playerid AND StartTimeDate>:days30
             """, locals()).fetchone()
             if ans is None:
                 ans = 0
@@ -1857,7 +1869,7 @@ class GenericBackend(DbSchemata):
                 ans = ans[0]
             res['km30days'] = ans
 
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT SUM(Cuts), SUM(CollisionsCar), SUM(CollisionsEnv) FROM
                 Lap WHERE PlayerInSessionId IN
                     (SELECT PlayerInSessionId FROM PlayerInSession NATURAL JOIN Session WHERE PlayerId=:playerid AND StartTimeDate>:days30)
@@ -1871,7 +1883,7 @@ class GenericBackend(DbSchemata):
             res['numPodiums'] = [None,None,None]
             for i in range(3):
                 fp = i+1
-                ans = c.execute("""
+                ans = c_execute("""
                     SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
                     WHERE PlayerId=:playerid AND FinishPosition=:fp AND SessionType='Race'
                 """, locals()).fetchone()
@@ -1880,7 +1892,7 @@ class GenericBackend(DbSchemata):
                 else:
                     ans = ans[0]
                 res['numPodiums'][i] = ans
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
                 WHERE PlayerId=:playerid AND NOT FinishPosition IS NULL AND SessionType='Race'
             """, locals()).fetchone()
@@ -1893,7 +1905,7 @@ class GenericBackend(DbSchemata):
             res['numPodiums30days'] = [None,None,None]
             for i in range(3):
                 fp = i+1
-                ans = c.execute("""
+                ans = c_execute("""
                     SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
                     WHERE PlayerId=:playerid AND FinishPosition=:fp AND SessionType='Race' AND StartTimeDate>:days30
                 """, locals()).fetchone()
@@ -1902,7 +1914,7 @@ class GenericBackend(DbSchemata):
                 else:
                     ans = ans[0]
                 res['numPodiums30days'][i] = ans
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT COUNT(*) FROM PlayerInSession NATURAL JOIN Session
                 WHERE PlayerId=:playerid AND NOT FinishPosition IS NULL AND SessionType='Race' AND StartTimeDate>:days30
             """, locals()).fetchone()
@@ -1912,7 +1924,7 @@ class GenericBackend(DbSchemata):
                 ans = ans[0]
             res['numRaces30days']= ans
 
-            ans = c.execute("""
+            ans = c_execute("""
                 SELECT GroupId FROM GroupEntries
                 WHERE PlayerId=:playerid
             """, locals()).fetchall()
