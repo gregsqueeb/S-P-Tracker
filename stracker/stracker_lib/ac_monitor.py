@@ -653,6 +653,7 @@ class ACMonitor:
 
     @acquire_lock
     def signin(self, trackname, guid, car, ac_version, pt_version, track_checksum, car_checksum):
+        guid = guid
         if trackname == '':
             # initial signin
             myassert( car == '' and ac_version == '' and track_checksum == '' and car_checksum == '' )
@@ -685,9 +686,9 @@ class ACMonitor:
     def check_for_ptracker_connection(self, driver):
         if len(connections) == 0: return
         for c in connections:
-            if c.guid == driver.guid:
+            if dbGuidMapper.guid_new(c.guid) == dbGuidMapper.guid_new(driver.guid):
                 break
-        if c.guid == driver.guid and hasattr(c, 'signin_info'):
+        if dbGuidMapper.guid_new(c.guid) == dbGuidMapper.guid_new(driver.guid) and hasattr(c, 'signin_info'):
             acdebug('found pending ptracker connection')
             si = c.signin_info
             driver.ptracker_invalid_version = False
@@ -708,6 +709,7 @@ class ACMonitor:
 
     @acquire_lock
     def get_player_name(self, guid):
+        guid = guid
         d = self.allDrivers.byGuidAll(guid)
         if len(d) > 0:
             return d[0].name
@@ -911,7 +913,8 @@ class ACMonitor:
     def send_server_data(self, target_guid = None):
         acdebug("send_server_data(%s)", str(target_guid))
         for c in connections:
-            if c.guid in self.newServerDataAvailable:
+            acdebug("%s in newsd[%d] -> %s", dbGuidMapper.guid_orig(c.guid), len(self.newServerDataAvailable), dbGuidMapper.guid_orig(c.guid) in self.newServerDataAvailable)
+            if dbGuidMapper.guid_orig(c.guid) in self.newServerDataAvailable:
                 c.serverDataChanged(immediate=(c.guid == target_guid))
         self.newServerDataAvailable = set()
 
@@ -934,8 +937,11 @@ class ACMonitor:
 
     @acquire_lock
     def sendMessageToPlayer(self, guid, text, color, mtype, addToLog=True):
-        ptracker_guids = [d.guid for d in self.allDrivers.allDriversWithPtracker()]
-        d = self.allDrivers.byGuidActive(guid)
+        acdebug("smtp: guid in =%s", guid)
+        guid = (guid)
+        ptracker_guids = [(d.guid) for d in self.allDrivers.allDriversWithPtracker()]
+        d = self.allDrivers.byGuidActive((guid))# dbGuidMapper.guid_orig
+        acdebug("smtp: len(pt_guids)=%d d=%s", len(ptracker_guids), str(d))
         if guid in ptracker_guids:
             d.pending_messages.append({'text':text, 'color':color, 'type':mtype})
             self.newServerDataAvailable.add(guid)
@@ -945,7 +951,7 @@ class ACMonitor:
         else:
             disabled = self.database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
             if messageToString(mtype) in self.chat_msg_types and (not disabled or mtype == MTYPE_WELCOME):
-                self.sendChatMessageToPlayer(guid, text)
+                self.sendChatMessageToPlayer(dbGuidMapper.guid_orig(guid), text)
                 if addToLog:
                     acinfo("Chat message to %s: %s", guid, text)
 
@@ -1192,6 +1198,8 @@ class ACMonitor:
     def newConnection(self, event):
         if config.config.STRACKER_CONFIG.guids_based_on_driver_names:
             dbGuidMapper.register_guid_mapping(event.driverGuid, event.driverName)
+        else:
+            dbGuidMapper.register_guid_mapping(event.driverGuid, guidhasher(event.driverGuid))
         # check if a rejoin occured
         d = None
         for td in self.allDrivers.byGuidAll(event.driverGuid):
@@ -1720,8 +1728,9 @@ def onCommand(acmonitor, database, guid, command):
         for g in groups:
             if g['name'] == 'admins':
                 adminids.add(g['groupid'])
-        plyDetails = database.playerDetails(__sync=True, guid=dbGuidMapper.guid_new(guid))()
+        plyDetails = database.playerDetails(__sync=True, guid=dbGuidMapper.guid_orig(guid))()
         check = len(adminids.intersection(set(plyDetails['memberOfGroup']))) > 0
+        acdebug("onCommand; guid info: guid_in=%s plyDetails=%s admin=%d", guid, plyDetails, check)
     else:
         check = 1
     send_help = 1
@@ -1736,7 +1745,7 @@ def onCommand(acmonitor, database, guid, command):
                 acmonitor.sendChatMessageToPlayer(guid, "no")
         elif command.startswith("kickban"):
             command = command[len('kickban'):].strip()
-            res = banlist.onCommand(command)
+            res = banlist.onCommand(command, dbGuidMapper)
             if res:
                 acmonitor.sendChatMessageToPlayer(guid, res)
                 send_help = 0
@@ -1783,26 +1792,52 @@ def onCommand(acmonitor, database, guid, command):
         acmonitor.sendChatMessageToPlayer(guid, "not in admins group")
         help_commands.extend(["add yourself to group 'admins' to get more commands"])
     if not guid is None:
-        d = acmonitor.allDrivers.byGuidActive(guid)
-        if not d is None and d.ptracker_conn is None:
-            if command.startswith("messages"):
-                command = command[len("messages"):].strip()
+        d = acmonitor.allDrivers.byGuidActive(dbGuidMapper.guid_orig(guid))
+        if not d is None:
+            if d.ptracker_conn is None:
+                disabled = None
+                if command.startswith("messages"):
+                    command = command[len("messages"):].strip()
+                    if command == "on":
+                        disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0)()
+                        send_help = 0
+                    elif command == "off":
+                        disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0x7fffffff)()
+                        send_help = 0
+                    elif command == "status":
+                        disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
+                        send_help = 0
+                help_commands.extend(["/st messages [on|off|status]"])
+                if disabled is not None:
+                    acdebug("%s", disabled)
+                    if disabled == 0:
+                        acmonitor.sendChatMessageToPlayer(guid, "Messages are enabled")
+                    else:
+                        acmonitor.sendChatMessageToPlayer(guid, "Messages are disabled")
+            if command.startswith("anonymize"):
+                command = command[len("anonymize"):].strip()
+                anon_status = None
                 if command == "on":
-                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0)()
                     send_help = 0
+                    anon_status = database.anonymize(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, enabled=1)()
                 elif command == "off":
-                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, newVal=0x7fffffff)()
                     send_help = 0
+                    anon_status = database.anonymize(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, enabled=0)()
                 elif command == "status":
-                    disabled = database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
                     send_help = 0
-            help_commands.extend(["/st messages [on|off|status]"])
-            if send_help == 0:
-                acdebug("%s", disabled)
-                if disabled == 0:
-                    acmonitor.sendChatMessageToPlayer(guid, "Messages are enabled")
-                else:
-                    acmonitor.sendChatMessageToPlayer(guid, "Messages are disabled")
+                    anon_status = database.anonymize(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, enabled="status")()
+                elif command == "help":
+                    send_help = 0
+                    acmonitor.sendChatMessageToPlayer(guid, "You can choose to anonymize the data stored in the stracker database related to your steam account.")
+                    acmonitor.sendChatMessageToPlayer(guid, "Depending on the server's settings, you might not be able to join the server again afterwards!")
+                    anon_status = database.anonymize(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name, enabled="status")()
+                if anon_status is not None:
+                    acdebug("anony_status=%s", repr(anon_status))
+                    if anon_status == 0:
+                        acmonitor.sendChatMessageToPlayer(guid, "Your personal data is not currently anonymized.")
+                    else:
+                        acmonitor.sendChatMessageToPlayer(guid, "Your personal data is currently anonymized.")
+            help_commands.extend(["/st anonymize [help|on|off|status]"])
     if send_help:
         acmonitor.sendChatMessageToPlayer(guid, "stracker command help:")
         for hc in help_commands:
@@ -1821,7 +1856,7 @@ def onChat(acmonitor, database, guid, message):
             d.receivedBadWordWarnings += 1
             if d.receivedBadWordWarnings > config.config.SWEAR_FILTER.num_warnings:
                 numDays = config.config.SWEAR_FILTER.ban_duration if config.config.SWEAR_FILTER.action == config.config.SF_BAN else 0
-                banlist.onCommand("guid %s %d" % (d.guid, numDays))
+                banlist.onCommand("guid %s %d" % (d.guid, numDays), dbGuidMapper)
             else:
                 if config.config.SWEAR_FILTER.action == config.config.SF_BAN:
                     swear_action = "banned"
@@ -1837,10 +1872,6 @@ class DBGuidMapper:
         self.map_new_to_orig = {}
 
     def register_guid_mapping(self, guid_orig, guid_new):
-        d = hashlib.md5(guid_new.encode('utf8')).digest() # 16 bytes
-        d = struct.unpack('qq', d)
-        d = abs(d[0] ^ d[1])
-        guid_new = str(d)
         self.map_orig_to_new[guid_orig] = guid_new
         self.map_new_to_orig[guid_new] = guid_orig
 
@@ -1916,7 +1947,7 @@ def run(dbBackend):
             else:
                 acdebug("sendChatMessageToPlayer %s %s", guid, message)
                 if not guid is None:
-                    stracker_udp_plugin.synchronizer.udpRequest(udp_plugin.sendChatMessageToGuid)(guid, message)
+                    stracker_udp_plugin.synchronizer.udpRequest(udp_plugin.sendChatMessageToGuid)(dbGuidMapper.guid_orig(guid), message)
                 else:
                     livemap.update_chat('SERVER', message)
         acmonitor.sendChatMessageToPlayer = sendChatMessageToPlayer

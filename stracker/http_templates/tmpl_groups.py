@@ -150,7 +150,7 @@ function delGroup()
                         <th>Driver name</th>
                         <th>Online</th>
 % if features['admin']:
-                        <th>Steam GUID</th>
+                        <th>Steam GUID Hash</th>
 %    if features['banlist']:
                         <th>Ban count</th>
                         <th>Banned until</th>
@@ -165,7 +165,7 @@ function delGroup()
                         <td>{{r['name']}}</td>
                         <td>{{'@' + r['isOnline'] if not r['isOnline'] is None else '-'}}</td>
 % if features['admin']:
-                        <td>{{r['guid']}}</td>
+                        <td>{{"..." + r['guid'][-10:]}}</td>
 %    if features['banlist']:
                         <td>{{r['banCount'] if not r['banCount'] is None else '-'}}</td>
                         <td>{{format_datetime(unixtime2datetime(r['bannedUntil']),onlyDate=True) if not r['bannedUntil'] is None else '-'}}</td>

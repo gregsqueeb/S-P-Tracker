@@ -27,6 +27,7 @@ import pickle
 import cherrypy
 
 from ptracker_lib.helpers import *
+from stracker_lib import config
 
 AUTH_CACHE_MAINTAINANCE_INTERVAL = 1800  # 30 minutes
 MAX_CACHE_ENTRIES = 1000 # should be < 1 MB
@@ -51,6 +52,10 @@ class AuthCache(Thread):
         res = set()
         for p in players['players']:
             res.add(p['guid'])
+        if config.config.HTTP_CONFIG.auth_ban_anonymized_players:
+            players = self.db.getPlayers(__sync = True, limit=None, anonymized = True)()
+            for p in players['players']:
+                res.add(p['guid'])
         return res
 
     def rescanBlacklist(self):
@@ -66,7 +71,7 @@ class AuthCache(Thread):
         return res
 
     def get_local(self, **kw):
-        GUID = kw['guid']
+        GUID = guidhasher(kw['guid'])
         maxTimePercentage = kw['maxTimePercentage']
         maxRank = kw['maxRank']
         minNumLaps = kw['minNumLaps']

@@ -113,8 +113,6 @@ class StrackerPublicBase:
                 'banlist': False,
                 'version': version,
                 'checksum_tests': config.config.STRACKER_CONFIG.perform_checksum_comparisons,
-                'flattr':False,
-                'paypal':False,
                 'pts':True,
                 }
 

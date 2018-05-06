@@ -112,7 +112,7 @@ class CompressedConnection:
 class ProtocolHandler:
 
     # protocol version
-    PROT_VERSION = 16
+    PROT_VERSION = 17
 
     # requests as seen from ptracker as client and stracker as server
     REQ_PROTO_START = 0
@@ -206,6 +206,7 @@ class ProtocolHandler:
     def req_signin(self, trackname, guid, car,
                    ac_version, pt_version,
                    track_checksum, car_checksum):
+        guid = guidhasher(guid)
         dgram= self._request_pack(self.REQ_SIGNIN, trackname=trackname, guid=guid, car=car,
                                   ac_version=ac_version, pt_version=pt_version,
                                   track_checksum=track_checksum, car_checksum=car_checksum)
@@ -237,6 +238,7 @@ class ProtocolHandler:
         self.socket.sendall(dgram,self.REQ_GET_GUID)
 
     def ans_get_guid(self, guid):
+        guid = guidhasher(guid)
         dgram= self._request_pack(self.ANS_GET_GUID, guid=guid)
         self.socket.sendall(dgram,self.ANS_GET_GUID)
 
@@ -247,7 +249,7 @@ class ProtocolHandler:
                                   track=track,
                                   artint=artint,
                                   cars=cars,
-                                  ego_guid=ego_guid,
+                                  ego_guid=guidhasher(ego_guid),
                                   valid=valid,
                                   minSessionStartTime=minSessionStartTime)
         self.socket.sendall(dgram,self.REQ_GET_LAP_STATS)
@@ -261,7 +263,7 @@ class ProtocolHandler:
                                    limit=limit,
                                    tracks=tracks,
                                    sessionTypes=sessionTypes,
-                                   ego_guid=ego_guid,
+                                   ego_guid=guidhasher(ego_guid),
                                    minSessionStartTime=minSessionStartTime,
                                    minNumPlayers=minNumPlayers,
                                    multiplayer=multiplayer)
@@ -315,9 +317,10 @@ class ProtocolHandler:
 
         pti_dict = {}
         for pi in pti:
-            pti_dict[pi['guid']] = pi
+            pti_dict[guidhasher(pi['guid'])] = pi
         delta_pti = get_delta(pti_dict, opti)
         for guid in pti_dict.keys():
+            guid = guidhasher(guid)
             if not guid in delta_pti:
                 delta_pti[guid] = {}
         delta_session_state = get_delta(session_state, oss)
@@ -327,6 +330,7 @@ class ProtocolHandler:
 
         delta_pti_list = []
         for guid in pti_dict.keys():
+            guid = guidhasher(guid)
             delta_pti_list.append(delta_pti[guid])
             delta_pti_list[-1]['guid'] = guid
 
@@ -335,10 +339,11 @@ class ProtocolHandler:
     def set_sd_payload(self, delta_pti, delta_session_state, messages):
         delta_pti_dict = {}
         for pti in delta_pti:
-            delta_pti_dict[pti['guid']] = pti
+            delta_pti_dict[guidhasher(pti['guid'])] = pti
 
         pti_dict = {}
         for guid in delta_pti_dict:
+            guid = guidhasher(guid)
             # set old data
             pti_dict[guid] = self.server_data_state['pti'].get(guid, {})
             # replace with delta data
@@ -353,6 +358,7 @@ class ProtocolHandler:
 
         pti_list = []
         for guid in pti_dict:
+            guid = guidhasher(guid)
             pti_list.append(pti_dict[guid])
             pti_list[-1]['guid'] = guid
         return dict(ptracker_instances = pti_list, session_state = session_state, messages = messages)
@@ -368,7 +374,7 @@ class ProtocolHandler:
 
     def req_get_server_data(self, guid):
         if self.prot_version >= 3:
-            dgram = self._request_pack(self.REQ_GET_SERVER_DATA, guid=guid)
+            dgram = self._request_pack(self.REQ_GET_SERVER_DATA, guid=guidhasher(guid))
             self.socket.sendall(dgram,self.REQ_GET_SERVER_DATA)
 
     def ans_get_server_data(self, ptracker_instances, session_state, messages):
@@ -382,7 +388,7 @@ class ProtocolHandler:
 
     def req_send_setup(self, target_guid, setup, setup_car):
         if self.prot_version >= 3:
-            dgram = self._request_pack(self.REQ_SEND_SETUP, target_guid=target_guid, setup=setup, setup_car=setup_car)
+            dgram = self._request_pack(self.REQ_SEND_SETUP, target_guid=guidhasher(target_guid), setup=setup, setup_car=setup_car)
             self.socket.sendall(dgram,self.REQ_SEND_SETUP)
 
     def ans_send_setup(self, ok):
@@ -471,7 +477,7 @@ class ProtocolHandler:
             packed += self._pack_short_string(trackerid)
         elif req == self.REQ_SIGNIN:
             trackname = kw['trackname']
-            guid = kw['guid']
+            guid = guidhasher(kw['guid'])
             car = kw['car']
             ac_version = kw['ac_version']
             pt_version = kw['pt_version']
@@ -528,7 +534,7 @@ class ProtocolHandler:
             driver = kw['driver']
             packed += self._pack_string(driver)
         elif req == self.ANS_GET_GUID:
-            guid = kw['guid']
+            guid = guidhasher(kw['guid'])
             packed += self._pack_string(guid)
         elif req == self.REQ_GET_LAP_STATS:
             mode = kw['mode']
@@ -536,7 +542,7 @@ class ProtocolHandler:
             track = kw['track']
             artint = kw['artint']
             cars = kw['cars']
-            ego_guid = kw['ego_guid']
+            ego_guid = guidhasher(kw['ego_guid'])
             valid = kw['valid']
             minSessionStartTime = kw['minSessionStartTime']
             packed += self._pack_string(mode)
@@ -562,7 +568,7 @@ class ProtocolHandler:
                 packed += self._pack_string(r['name'])
                 packed += self._pack_string(r['car'])
                 packed += self._pack_string(r['tyre'])
-                packed += self._pack_string(r['guid'])
+                packed += self._pack_string(guidhasher(r['guid']))
                 sectors = list(map(lambda x: x or 0, r['sectors']))
                 packed += struct.pack('<b%dI' % len(sectors), len(sectors), *sectors)
                 if self.prot_version >= 4:
@@ -593,7 +599,7 @@ class ProtocolHandler:
             limit=kw['limit']
             tracks=kw['tracks']
             sessionTypes=kw['sessionTypes']
-            ego_guid=kw['ego_guid']
+            ego_guid=guidhasher(kw['ego_guid'])
             minSessionStartTime=kw['minSessionStartTime']
             minNumPlayers=kw['minNumPlayers']
             multiplayer=kw['multiplayer']
@@ -663,12 +669,12 @@ class ProtocolHandler:
         elif req == self.REQ_GET_SERVER_DATA:
             if self.prot_version < 3:
                 raise NotImplementedError()
-            packed += self._pack_string(kw['guid'])
+            packed += self._pack_string(guidhasher(kw['guid']))
         elif req == self.ANS_GET_SERVER_DATA:
             ptracker_instances = kw['ptracker_instances']
             packed += struct.pack('<I', len(ptracker_instances))
             for pi in ptracker_instances:
-                packed += self._pack_string(pi['guid'])
+                packed += self._pack_string(guidhasher(pi['guid']))
                 packed += self._pack_string(pi['name'])
                 packed += struct.pack('<I', pi['ptracker_conn'])
                 if 'setup' in pi:
@@ -691,7 +697,7 @@ class ProtocolHandler:
                     if self.prot_version >= 6:
                         packed += struct.pack('<i', m['type'])
         elif req == self.REQ_SEND_SETUP:
-            target_guid = kw['target_guid']
+            target_guid = guidhasher(kw['target_guid'])
             carname = kw['setup_car']
             setup = kw['setup']
             packed += self._pack_string(target_guid)
@@ -776,7 +782,10 @@ class ProtocolHandler:
             for pi in pti:
                 try:
                     guid = pi['guid']
-                    int(guid)
+                    if self.prot_version >= 17:
+                        guid = guidhasher(guid)
+                    else:
+                        int(guid)
                     npti.append(pi)
                 except ValueError:
                     pass
@@ -797,7 +806,11 @@ class ProtocolHandler:
                 if self.prot_version >= 11 and 'currLapInvalidated' in pi: features = features | 512
                 if self.prot_version >= 15 and 'mr_rating' in pi: features = features | 1024
                 if self.prot_version >= 16 and 'carid' in pi: features = features | 2048
-                if self.prot_version >= 11:
+                if self.prot_version >= 17:
+                    packed += self._pack_string(guidhasher(guid))
+                    packed += struct.pack('<H', features)
+                    acdebug("ssd: %s", guidhasher(guid))
+                elif self.prot_version >= 11:
                     packed += struct.pack('<QH', int(guid), features)
                 else:
                     packed += struct.pack('<QB', int(guid), features)
@@ -901,7 +914,7 @@ class ProtocolHandler:
         #    raise ProtocolError('Protocol version mismatch (received %d, implemented %d).' % (prot_version, self.PROT_VERSION))
         if req == self.REQ_SIGNIN:
             res['trackname'] = self._unpack_string()
-            res['guid'] = self._unpack_string()
+            res['guid'] = guidhasher(self._unpack_string())
             res['car'] = self._unpack_string()
             res['ac_version'] = self._unpack_string()
             res['pt_version'] = self._unpack_string()
@@ -948,7 +961,7 @@ class ProtocolHandler:
         elif req == self.REQ_GET_GUID:
             res['driver'] = self._unpack_string()
         elif req == self.ANS_GET_GUID:
-            res['guid'] = self._unpack_string()
+            res['guid'] = guidhasher(self._unpack_string())
         elif req == self.REQ_GET_LAP_STATS:
             res['mode'] = self._unpack_string()
             lm, *limit = self._unpack_from_format('<bII')
@@ -963,7 +976,7 @@ class ProtocolHandler:
             res['cars'] = []
             for i in range(lenCars):
                 res['cars'].append(self._unpack_string())
-            res['ego_guid'] = self._unpack_string()
+            res['ego_guid'] = guidhasher(self._unpack_string())
             if prot_version >= 2:
                 lv, = self._unpack_from_format('<b')
                 res['valid'] = self._unpack_from_format('<%db' % lv)
@@ -983,7 +996,7 @@ class ProtocolHandler:
                 r['name'] = self._unpack_string()
                 r['car'] = self._unpack_string()
                 r['tyre'] = self._unpack_string()
-                r['guid'] = self._unpack_string()
+                r['guid'] = guidhasher(self._unpack_string())
                 ns, = self._unpack_from_format('<b')
                 r['sectors'] = self._unpack_from_format('<%dI' % ns)
                 r['sectors'] = list(map(lambda x: x or None, r['sectors']))
@@ -1038,7 +1051,7 @@ class ProtocolHandler:
                 sessionTypes = []
                 for i in range(tn):
                     sessionTypes.append(self._unpack_string())
-            ego_guid = self._unpack_string()
+            ego_guid = guidhasher(self._unpack_string())
             minSessionStartTime, minNumPlayers, lmp = self._unpack_from_format('<III')
             multiplayer = self._unpack_from_format('<%dI' % lmp)
             res = {'limit':limit, 'tracks':tracks, 'sessionTypes':sessionTypes,
@@ -1073,13 +1086,13 @@ class ProtocolHandler:
         elif req == self.REQ_SERVER_DATA_CHANGED:
             res = {}
         elif req == self.REQ_GET_SERVER_DATA:
-            res = {'guid':self._unpack_string()}
+            res = {'guid':guidhasher(self._unpack_string())}
         elif req == self.ANS_GET_SERVER_DATA:
             ptracker_instances = []
             n, = self._unpack_from_format('<I')
             for i in range(n):
                 pi = {}
-                pi['guid'] = self._unpack_string()
+                pi['guid'] = guidhasher(self._unpack_string())
                 pi['name'] = self._unpack_string()
                 pi['ptracker_conn'], = self._unpack_from_format('<I')
                 hasSetup, = self._unpack_from_format('<b')
@@ -1108,7 +1121,7 @@ class ProtocolHandler:
                 res['messages'] = msgs
         elif req == self.REQ_SEND_SETUP:
             res = {}
-            res['target_guid'] = self._unpack_string()
+            res['target_guid'] = guidhasher(self._unpack_string())
             res['setup_car'] = self._unpack_string()
             res['setup'] = zlib.decompress(self._unpack_bytes())
         elif req == self.ANS_SEND_SETUP:
@@ -1180,11 +1193,15 @@ class ProtocolHandler:
             messages = []
             n_guids, = self._unpack_from_format('<b')
             for i in range(n_guids):
-                if self.prot_version >= 11:
+                if self.prot_version >= 17:
+                    guid = self._unpack_string()
+                    acdebug("got guid=%s", guid)
+                    features, = self._unpack_from_format('<H')
+                elif self.prot_version >= 11:
                     guid, features =  self._unpack_from_format('<QH')
                 else:
                     guid, features =  self._unpack_from_format('<QB')
-                guid = str(guid)
+                guid = guidhasher(str(guid))
                 r = {'guid':guid}
                 if features & 1 : r['name'] = self._unpack_string()
                 if features & 2 : r['ptracker_conn'], = self._unpack_from_format('<b')

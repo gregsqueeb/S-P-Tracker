@@ -20,9 +20,10 @@ class MRQuery:
         self.callback = callback
 
     def query(self, guid):
-        res = self.database.queryMR(__sync=True, guid=guid)()
+        res = self.database.queryMR(__sync=True, guid=guidhasher(guid))()
         if not res is '' and not res is None:
             self.done(guid, None, res)
+            return
 
         def query_from_mr(guid):
             global url, errors_in_sequence
@@ -66,7 +67,7 @@ class MRQuery:
 
     def done(self, guid, tb, res):
         if tb is None and not res is None and not res == '':
-            self.database.queryMR(__sync=True, guid=guid, set_rating=res)
+            self.database.queryMR(__sync=True, guid=guidhasher(guid), set_rating=res)
             self.callback(guid, res.lower())
         elif not tb is None:
             et,ev,etb = tb

@@ -202,7 +202,7 @@ class PersonalHotlaps:
         if guid is None:
             acerror("Cannot get your steam guid. This is needed for some parts of ptracker. Will continue with a dummy guid, but some functionalities are broken.")
             guid = "<unknown>"
-        return guid
+        return guidhasher(guid)
 
     def init(self, reason = "first call"):
         if hasattr(self, 'results'):
@@ -1046,7 +1046,7 @@ class PersonalHotlaps:
             sd = self.ptClient.server_data.get()
             activeGuids = set()
             for r in sd['ptracker_instances']:
-                guid = r['guid']
+                guid = guidhasher(r['guid'])
                 if type(guid) != str:
                     guid = str(guid)
                 acdebug("guid: %s", guid)

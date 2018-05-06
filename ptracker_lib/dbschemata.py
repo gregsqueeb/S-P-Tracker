@@ -33,7 +33,7 @@ class DbSchemata:
         if not force_version is None:
             self.version = force_version
         else:
-            self.version = 23
+            self.version = 24
             if version < self.version and perform_backups:
                 print("Performing database backup before migration. This might take a while. You'd better not interrupt this process.")
                 self.backup(version, self.version)
@@ -1574,3 +1574,12 @@ class DbSchemata:
             )
         """ % self.__dict__)
         self.setVersion(cur, 23)
+
+    def migrate_23_24(self):
+        cur = self.db.cursor()
+        cur.execute("SELECT PlayerId, SteamGuid FROM Players")
+        for pid, guid in cur.fetchall():
+            guid = guidhasher(guid)
+            cur.execute("UPDATE Players SET SteamGuid = :guid WHERE PlayerId = :pid", locals())
+        cur.execute("ALTER TABLE Players ADD COLUMN Anonymized INTEGER")
+        self.setVersion(cur, 24)

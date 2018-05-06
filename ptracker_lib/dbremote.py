@@ -61,7 +61,7 @@ class PtrackerClient:
         self.connection_retry_timestamps = []
         self.server_address = server_address
         self.server_port = server_port
-        self.guid = guid
+        self.guid = guidhasher(guid)
         self.pendingServerData = False
         self.lock = RLock()
         self.server_data = Queue()
@@ -381,6 +381,7 @@ class RemoteBackend:
                     lapHistory, tyre, lapCount, sessionTime, fuelRatio, valid, carname, staticAssists, dynamicAssists,
                     maxSpeed, timeInPitLane, timeInPit, escKeyPressed, teamName,
                     gripLevel, collisionsCar, collisionsEnv, cuts, ballast):
+        steamGuid = guidhasher(steamGuid)
         acdebug("remotedb::registerLap %s", steamGuid)
         if steamGuid is None:
             return
@@ -404,11 +405,13 @@ class RemoteBackend:
         myassert(ans['ok'] == 1)
 
     def lapStats(self, mode, limit, track, artint, cars, ego_guid, valid, minSessionStartTime):
+        ego_guid = guidhasher(ego_guid)
         if self.client is None or not self.client.isOnline():
             return
         return self.client.lap_stats(mode, limit, track, artint, cars, ego_guid, valid, minSessionStartTime)
 
     def sessionStats(self, limit, tracks, sessionTypes, ego_guid, minSessionStartTime, minNumPlayers, multiplayer):
+        ego_guid = guidhasher(ego_guid)
         if self.client is None or not self.client.isOnline():
             return
         try:

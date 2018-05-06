@@ -29,6 +29,7 @@ import math
 import re
 import functools
 import traceback
+import hashlib
 
 __all__ = ['myassert', 'acdump', 'acdebug', 'acinfo', 'acwarning', 'acerror',
            'time_to_min_sec_msec_tuple', 'time_to_min_sec_hsec_tuple',
@@ -37,7 +38,8 @@ __all__ = ['myassert', 'acdump', 'acdebug', 'acinfo', 'acwarning', 'acerror',
            'utc2localtime', 'localtime2utc', 'format_datetime',
            'point_distance', 'callbackDecorator', 'isProMode',
            'format_temp', 'format_vel', 'setFormatUnits',
-           'genericAcCallback', 'tracer', "acverbosity", "StringShortener", "DBBusyError"]
+           'genericAcCallback', 'tracer', "acverbosity", "StringShortener", "DBBusyError",
+           "guidhasher"]
 
 class DBBusyError(RuntimeError):
     pass
@@ -497,6 +499,15 @@ def simulate_crappy_connection():
             return getattr(self.socket, a)
 
     socket.socket = SocketWrapper
+
+def guidhasher(guid):
+    if guid is None:
+        return None
+    if not guid.startswith("sha256#") and guid != "":
+        m = hashlib.sha256()
+        m.update(guid.encode())
+        guid = "sha256#" + m.hexdigest()
+    return guid
 
 if 0:
     acwarning("!!!!!!!!!!!!!!!!!!!Simulating a crappy connection!!!!!!!!!!!!!!!!!")

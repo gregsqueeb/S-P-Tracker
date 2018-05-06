@@ -129,7 +129,7 @@ def _update():
 def _genLiveInfo():
     res = []
     for d in ranking:
-        cc = CarPosition(guid=d.guid, x=d.p3d[0], y=d.p3d[2])
+        cc = CarPosition(guid=guidhasher(d.guid), x=d.p3d[0], y=d.p3d[2])
         res.append(cc.to_buffer())
     return tuple(res)
 
@@ -137,7 +137,7 @@ def _genClassification():
     res = []
     for p,d in enumerate(ranking):
         pos = p+1
-        cc = CarClassification(pos=pos, guid=d.guid, name=d.name, bestLapTime=d.bestTime() or 0, lapCount=d.lapCount(), sumLapTimes=d.totalTime() or 0, finished=d.raceFinished, car=d.car, connected=d.carId != -1)
+        cc = CarClassification(pos=pos, guid=guidhasher(d.guid), name=d.name, bestLapTime=d.bestTime() or 0, lapCount=d.lapCount(), sumLapTimes=d.totalTime() or 0, finished=d.raceFinished, car=d.car, connected=d.carId != -1)
         res.append(cc.to_buffer())
     return tuple(res)
 

@@ -194,8 +194,6 @@ class StrackerPublic(http_server_base.StrackerPublicBase):
                 'banlist': banlist.available(),
                 'version': version,
                 'checksum_tests':config.config.STRACKER_CONFIG.perform_checksum_comparisons,
-                'flattr':False,
-                'paypal':config.config.HTTP_CONFIG.enable_paypal_link,
                 'pts': False,
                 }
 

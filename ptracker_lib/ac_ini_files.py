@@ -47,6 +47,8 @@ class RaceIniFile(BaseACIniFile):
         res = self._parser.get('REMOTE', 'GUID', fallback=None)
         if res is None or res == "":
             res = None
+        else:
+            res = guidhasher(res)
         return res
 
     def serverPort(self):

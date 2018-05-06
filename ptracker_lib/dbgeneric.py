@@ -189,6 +189,7 @@ class GenericBackend(DbSchemata):
             if assertHistoryInfo:
                 stmt += " AND LapId IN (SELECT LapId FROM LapBinBlob WHERE HistoryInfo NOTNULL)"
             if not playerGuid is None:
+                playerGuid = guidhasher(playerGuid)
                 stmt += " AND SteamGuid=:playerGuid"
             lapValid = 1
             stmt = """
@@ -247,6 +248,7 @@ class GenericBackend(DbSchemata):
                 cur = self.db.cursor()
                 return self.getSBandPB(trackname, carname, playerGuid, cur)
         else:
+            playerGuid = guidhasher(playerGuid)
             cur = cursor
             cur.execute("""
                 SELECT LapTime
@@ -282,6 +284,7 @@ class GenericBackend(DbSchemata):
             res = []
             stmt = ""
             if not playerGuid is None:
+                playerGuid = guidhasher(playerGuid)
                 stmt += " AND SteamGuid=:playerGuid"
             lapValid = 1
             for i in range(10):
@@ -345,6 +348,7 @@ class GenericBackend(DbSchemata):
                     else:
                         steamGuid = "unknown_guid_"
                     steamGuid += playerName
+                    steamGuid = guidhasher(steamGuid)
                 carname = self.currentSession.guid_cars_mapping.get(steamGuid, None)
                 if carname is None:
                     acinfo("Player %s (Position %d) has not been associated in this session. Ignoring." % (playerName, sessionPosition))
@@ -426,6 +430,7 @@ class GenericBackend(DbSchemata):
                 else:
                     steamGuid = "unknown_guid_"
                 steamGuid += playerName
+                steamGuid = guidhasher(steamGuid)
             cur.execute("""
                 INSERT INTO Players(SteamGuid,Name,ArtInt)
                     SELECT :steamGuid,:playerName,:playerIsAI
@@ -435,7 +440,7 @@ class GenericBackend(DbSchemata):
                 UPDATE Players SET
                     Name = :playerName,
                     ArtInt = :playerIsAI
-                WHERE SteamGuid=:steamGuid
+                WHERE SteamGuid=:steamGuid AND Anonymized!=1
             """, locals())
             # team
             if teamName is None or teamName.strip() == "":
@@ -654,6 +659,7 @@ class GenericBackend(DbSchemata):
                 c = self.db.cursor()
                 return self.lapStats( mode, limit, track, artint, cars, ego_guid, valid, minSessionStartTime, tyre_list, server, group_by_guid, groups, cursor=c)
         else:
+            ego_guid = guidhasher(ego_guid)
             proft = time.time()
             startt = proft
             if track is None:
@@ -909,6 +915,7 @@ class GenericBackend(DbSchemata):
     def getNameByGuid(self, guid):
         with self.db:
             cur = self.db.cursor()
+            guid = guidhasher(guid)
             cur.execute("SELECT Name FROM Players WHERE SteamGuid = :guid", locals())
             a = cur.fetchone()
             if not a is None and len(a) == 1:
@@ -918,6 +925,7 @@ class GenericBackend(DbSchemata):
     def sessionStats(self, limit, tracks, sessionTypes, ego_guid, minSessionStartTime, minNumPlayers, multiplayer, minNumLaps = None):
         with self.db:
             c = self.db.cursor()
+            ego_guid = guidhasher(ego_guid)
 
             if type(sessionTypes) == type(""): sessionTypes = [sessionTypes]
             if sessionTypes is None:
@@ -1585,7 +1593,7 @@ class GenericBackend(DbSchemata):
                 laps.append(r)
             return {'laps':laps, 'playerInSessioInfo':pisInfo}
 
-    def getPlayers(self, limit, searchPattern = None, inBanList = False, group_id = None, include_groups = False, inWhitelist = False, orderby=None):
+    def getPlayers(self, limit, searchPattern = None, inBanList = False, group_id = None, include_groups = False, inWhitelist = False, orderby=None, anonymized = False):
         with self.db:
             c = CursorDebug(self.db.cursor())
             now = unixtime_now()
@@ -1623,6 +1631,12 @@ class GenericBackend(DbSchemata):
                 else:
                     search_stmt += " AND"
                 search_stmt += " GroupId=:group_id"
+            if anonymized:
+                if search_stmt == "":
+                    search_stmt = "WHERE"
+                else:
+                    search_stmt = " AND"
+                search_stmt += " Anonymized = 1"
             limit_stmt = ""
             count = c.execute("""
                 WITH BannedPlayers AS (
@@ -1702,6 +1716,7 @@ class GenericBackend(DbSchemata):
     def setupDepositGet(self, guid, car, track, setupid = None):
         with self.db:
             c = self.db.cursor()
+            guid = guidhasher(guid)
             ans = c.execute("""
                 SELECT SetupDeposit.SetupId, SetupDeposit.Name AS SetupName, Players.Name AS SenderName, PlayerGroups.GroupName, Players.SteamGuid=:guid
                 FROM SetupDeposit LEFT JOIN Players ON (SetupDeposit.PlayerId=Players.PlayerId)
@@ -1739,6 +1754,7 @@ class GenericBackend(DbSchemata):
     def setupDepositSave(self, guid, car, track, name, groupid, setup):
         with self.db:
             c = self.db.cursor()
+            guid = guidhasher(guid)
             setup = bytes(setup)
             # make sure that car and track exists
             c.execute("""
@@ -1773,11 +1789,13 @@ class GenericBackend(DbSchemata):
     def setupDepositRemove(self, guid, setupid):
         with self.db:
             c = self.db.cursor()
+            guid = guidhasher(guid)
             c.execute("DELETE FROM SetupDeposit WHERE SetupId=:setupid and PlayerId IN (SELECT PlayerId FROM Players WHERE SteamGuid=:guid)", locals())
 
     def playerDetails(self, playerid = None, guid = None, include_km = False):
         with self.db:
             c = self.db.cursor()
+            guid = guidhasher(guid)
             if not playerid is None:
                 plyCond = " WHERE PlayerId=:playerid"
             else:
@@ -1936,6 +1954,7 @@ class GenericBackend(DbSchemata):
     def messagesDisabled(self, guid, name, newVal=None):
         with self.db:
             c = self.db.cursor()
+            guid = guidhasher(guid)
             # assert that player is existing
             if c.execute("SELECT PlayerId FROM Players WHERE SteamGuid=:guid", locals()).fetchone() is None:
                 c.execute("INSERT INTO Players(SteamGuid,Name) VALUES(:guid,:name)", locals())
@@ -1971,36 +1990,6 @@ class GenericBackend(DbSchemata):
                         SET Duration=:newDur
                         WHERE BlacklistId=:blId
                     """, locals())
-            elif not importedGuid is None:
-                ans = c.execute("SELECT PlayerId FROM Players WHERE SteamGuid=:importedGuid", locals()).fetchone()
-                if ans is None:
-                    c.execute("INSERT INTO Players(SteamGuid,Name,ArtInt) VALUES(:importedGuid,'Imported from blacklist',0)", locals())
-                    playerid=c.lastrowid
-                else:
-                    playerid=ans[0]
-                ans = c.execute("""
-                    SELECT BlacklistId,DateAdded,Duration FROM BlacklistedPlayers
-                    WHERE PlayerId=:playerid AND NOT ((BannedUntil IS NULL) OR BannedUntil <= :now)
-                """, locals()).fetchone()
-                if ans is None:
-                    if extendPeriod is None:
-                        duration=60*60*24*365*5
-                    else:
-                        duration = int(extendPeriod)
-                    c.execute("""
-                        INSERT INTO Blacklist(PlayerId,DateAdded,Duration)
-                        VALUES(:playerid,:now,:duration)
-                    """, locals())
-                else:
-                    if not extendPeriod is None:
-                        blId = ans[0]
-                        dateAdded = ans[1]
-                        newDur = now + extendPeriod - dateAdded
-                        c.execute("""
-                            UPDATE Blacklist
-                            SET Duration=:newDur
-                            WHERE BlacklistId=:blId
-                        """, locals())
             elif not extendPeriod is None:
                 if not blId is None:
                     newDur = now + extendPeriod - dateAdded
@@ -2011,6 +2000,7 @@ class GenericBackend(DbSchemata):
                     """, locals())
 
     def auth(self, guid, track=None, cars=None, server=None, valid=None, minNumLaps=None, maxTimePercentage=None, tyre_list=None, maxRank=None, groups=[]):
+        guid = guidhasher(guid)
         now = unixtime_now()
         with self.db:
             c = self.db.cursor()
@@ -2025,6 +2015,12 @@ class GenericBackend(DbSchemata):
             if blacklisted:
                 reason.append("You are currently blacklisted on this server (until %s)." % (unixtime2datetime(ans[0]).date()))
                 ok = False
+            if preventAnon:
+                ans = c.execute("SELECT Anonymized FROM Players WHERE SteamGuid=:guid", locals()).fetchone()
+                anon = not (ans == 0 or ans is None)
+                if anon:
+                    reason.append("Anonymized players are forbidden on this server.")
+                    ok = False
             ans = c.execute("SELECT Whitelisted FROM Players WHERE SteamGuid=:guid", locals()).fetchone()
             whitelisted = not ans is None and ans[0]
         if not maxTimePercentage is None or not maxRank is None or not minNumLaps is None:
@@ -2570,9 +2566,10 @@ class GenericBackend(DbSchemata):
 
     def recordChat(self, guid, name, message, server):
         with self.db:
+            guid = guidhasher(guid)
             cur = self.db.cursor()
             now = unixtime_now()
-            ans = cur.execute("SELECT PlayerId FROM Players WHERE SteamGUID = :guid", locals()).fetchone()
+            ans = cur.execute("SELECT PlayerId, Anonymized FROM Players WHERE SteamGUID = :guid", locals()).fetchone()
             if ans is None:
                 cur.execute("INSERT INTO Players(SteamGuid, Name) VALUES(:guid, :name)", locals())
                 pid = cur.lastrowid
@@ -2583,6 +2580,7 @@ class GenericBackend(DbSchemata):
     def filterChat(self, guid = None, server = None, startTime = None, endTime = None, limit = None):
         with self.db:
             cur = self.db.cursor()
+            guid = guidhasher(guid)
             search = []
             if not guid is None:
                 search.append("PlayerId IN (SELECT PlayerId FROM Players WHERE SteamGuid=:guid)")
@@ -2624,11 +2622,13 @@ class GenericBackend(DbSchemata):
 
     def queryMR(self, guid, set_rating = None):
         with self.db:
+            guid = guidhasher(guid)
             cur = self.db.cursor()
             cur.execute("SELECT Timestamp, Minorating, MRCacheId FROM MinoratingCache NATURAL JOIN Players WHERE Players.SteamGuid=:guid", locals())
             ans = cur.fetchone()
             res = None
             now = unixtime_now()
+            acdebug("queryMR: %s (%.1f hours ago)", ans[1] if not ans is None else "-", (now-ans[0])/3600 if not ans is None else 0)
             if not ans is None and now - ans[0] < 24*3600 and not ans[1] is None:
                 res = ans[1]
             else:
@@ -2638,6 +2638,39 @@ class GenericBackend(DbSchemata):
                 if not set_rating is None:
                     cur.execute("INSERT INTO MinoratingCache(PlayerId,Timestamp,Minorating) SELECT PlayerId, :now, :set_rating FROM Players WHERE SteamGuid=:guid", locals())
             return res.lower() if not res is None else ''
+
+    def anonymize(self, guid, name, enabled):
+        with self.db:
+            guid = guidhasher(guid)
+            cur = self.db.cursor()
+            acdebug("anon: get playerid")
+            cur.execute("SELECT PlayerId FROM Players WHERE SteamGuid = :guid", locals())
+            pid = cur.fetchone()
+            if pid is None:
+                return False
+            pid = pid[0]
+            acdebug("anon: update 1")
+            if enabled != "status":
+                if enabled:
+                    enabled = 1
+                else:
+                    enabled = 0
+                cur.execute("UPDATE Players SET Anonymized = :enabled WHERE PlayerId = :pid", locals())
+                if enabled:
+                    acdebug("anon: update 2")
+                    cur.execute("UPDATE Players SET Name = '<anonymized>' WHERE PlayerId = :pid", locals())
+                    acdebug("anon: delete chat")
+                    cur.execute("DELETE FROM ChatHistory WHERE PlayerId = :pid", locals())
+                    acdebug("anon: delete chat finished")
+                else:
+                    acdebug("anon: update 3")
+                    cur.execute("UPDATE Players SET Name = :name WHERE PlayerId = :pid", locals())
+            acdebug("anon: get status")
+            try:
+                status = cur.execute("SELECT Anonymized FROM Players WHERE SteamGuid = :guid", locals()).fetchone()
+            except Exception as e:
+                acerror(str(e))
+            return status[0] if not status is None else True
 
     def populate(self, other):
         def arg_list(n):
@@ -2679,6 +2712,7 @@ class GenericBackend(DbSchemata):
             # we assume that the index already exists
             pass
         with self.db:
+            steamGuid = guidhasher(steamGuid)
             cur = self.db.cursor()
             delete_time = unixtime_now() - 25 * 3600
             cur.execute("DELETE FROM MinoratingCache WHERE Timestamp < :delete_time", locals())

@@ -170,6 +170,7 @@ class LapDatabase:
         self.recordChat           = CallWrapper(self, lambda *args, self=self, **kw: self.db().recordChat(*args, **kw))
         self.filterChat           = CallWrapper(self, lambda *args, self=self, **kw: self.db().filterChat(*args, **kw))
         self.messagesDisabled     = CallWrapper(self, lambda *args, self=self, **kw: self.db().messagesDisabled(*args, **kw))
+        self.anonymize            = CallWrapper(self, lambda *args, self=self, **kw: self.db().anonymize(*args, **kw))
         self.getPtsResponse       = CallWrapper(self, lambda *args, self=self, **kw: self.db().getPtsResponse(*args, **kw))
         self.queryMR              = CallWrapper(self, lambda *args, self=self, **kw: self.db().queryMR(*args, **kw))
         self.isOnline = lambda self=self: self.db().isOnline()

@@ -206,7 +206,6 @@ class Config:
             'enable_svg_generation' : (True, conf.getboolean, 'set to false if you do not want svg graphs in the http output (for saving bandwidth)'),
             'log_requests' : (False, conf.getboolean, 'If set to true, http requests will be logged in stracker.log. Otherwise they are not logged.'),
             'auth_log_file' : ('', conf.get, 'Set to a file to be used for logging http authentication requests. Useful to prevent attacks with external program (e.g., fail2ban).'),
-            'enable_paypal_link' : (True, conf.getboolean, 'Enable paypal link for letting users donate to the author. If you do not like that, switch it off.'),
             'max_streaming_clients' : (10, conf.getint, 'Maximum number of streaming clients (LiveMap/Log users) allowed to connect to this server in parallel. The number of threads allocated for http serving will be max(10, max_streaming_clients + 5)'),
             'lap_times_add_columns' : ('valid+aids+laps+date', conf.get, 'Additional columns to be displayed in LapTimes table (seperated by a + sign). Columns can be "valid", "aids", "laps", "date", "grip", "cuts", "collisions", "tyres", "temps", "ballast" and "vmax". Note that too many displayed columns might cause problems on some browsers.'),
             'inverse_navbar' : (False, conf.getboolean, 'set to true to get the navbar inverted (i.e., dark instead of bright)'),
@@ -215,9 +214,7 @@ class Config:
             'ssl' : (False, conf.getboolean, 'Set to true if you want to use https. Note that you need a SSL certificate and key. If you enable this option, you can reach stracker at https://ip:port/ instead of http://ip:port/'),
             'ssl_certificate' : ('', conf.get, 'Path to the SSL certificate for https. Only used when ssl is True. A self-signed certificate can be generated with "openssl req -new -x509 -days 365 -key privkey.pem -out cert.pem"'),
             'ssl_private_key' : ('', conf.get, 'Path to the SSL private key for https. Only used when ssl is True. A private key can be generated with "openssl genrsa -out privkey.pem 2048"'),
-        }
-        self.sections['BLACKLIST'] = {
-            'blacklist_file' : ('', conf.get, 'Deprecated: it is generally better to use the authentication instead. Syncing the blacklist file has some issues in some scenarios.'),
+            'auth_ban_anonymized_players' : (False, conf.getboolean, "Add anonymized players to blacklist (works only if stracker's AUTH feature is used in server)."),
         }
         self.sections['WELCOME_MSG'] = {
             'line1' : ('Welcome to stracker %(version)s', conf.get, 'First line of welcome message text (if not empty, this text is sent a player when he enters the server'),
