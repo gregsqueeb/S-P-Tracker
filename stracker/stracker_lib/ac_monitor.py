@@ -823,9 +823,9 @@ class ACMonitor:
 
     @acquire_lock
     def completeLapInfo(self, **lpt):
-        d = self.allDrivers.byGuidActive(lpt['guid'])
+        d = self.allDrivers.byGuidActive(dbGuidMapper.guid_orig(lpt['guid']))
         if d is None:
-            acwarning("Cannot find guid %s in active drivers. Ignoring.")
+            acwarning("Cannot find guid %s in active drivers. Ignoring.", lpt['guid'])
         else:
             lpt['staticAssists'] = self.correctStaticAssists(lpt.get('staticAssists', {}))
             d.ptrackerLapInfo(lpt)
@@ -860,7 +860,7 @@ class ACMonitor:
 
     @acquire_lock
     def getServerData(self, for_guid):
-        d = self.allDrivers.byGuidActive(for_guid)
+        d = self.allDrivers.byGuidActive(dbGuidMapper.guid_orig(for_guid))
         ptrackerInstances = []
         messages = []
         if not d is None:
@@ -913,9 +913,12 @@ class ACMonitor:
     def send_server_data(self, target_guid = None):
         acdebug("send_server_data(%s)", str(target_guid))
         for c in connections:
-            acdebug("%s in newsd[%d] -> %s", dbGuidMapper.guid_orig(c.guid), len(self.newServerDataAvailable), dbGuidMapper.guid_orig(c.guid) in self.newServerDataAvailable)
-            if dbGuidMapper.guid_orig(c.guid) in self.newServerDataAvailable:
-                c.serverDataChanged(immediate=(c.guid == target_guid))
+            guid = dbGuidMapper.guid_orig(c.guid)
+            acdebug("%s in newsd[%d] -> %s", guid,
+                    len(self.newServerDataAvailable),
+                    guid in self.newServerDataAvailable)
+            if guid in self.newServerDataAvailable:
+                c.serverDataChanged(immediate=(guid == target_guid))
         self.newServerDataAvailable = set()
 
     @acquire_lock
@@ -947,6 +950,8 @@ class ACMonitor:
             self.newServerDataAvailable.add(guid)
             if addToLog:
                 acinfo("Ptracker message to %s: %s", guid, text)
+            else:
+                acdebug("Ptracker message to %s: %s", guid, text)
             self.send_server_data(guid)
         else:
             disabled = self.database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
@@ -1053,7 +1058,7 @@ class ACMonitor:
                 try:
                     JR = jsonresult_parser.JsonResults(jsonresults)
                     if JR.isRace():
-                        ac_positions = JR.racePositions()
+                        ac_positions = JR.racePositions(dbGuidMapper)
                 except:
                     acwarning("Error while parsing JSON results.")
                     acwarning(traceback.format_exc())
