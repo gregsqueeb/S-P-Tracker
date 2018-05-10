@@ -73,7 +73,7 @@ class LapCollector:
 
     def __init__(self, ptracker = None, carId = -1, guid = None, isAI = -1):
         self.carId = carId
-        self.guid = guidhasher(guid)
+        self.guid = guid
         self.server_guid = None
         self.isAI = isAI
         self.unplausibleVelocity = (500/3.6)*(500/3.6)

@@ -29,7 +29,6 @@ import math
 import re
 import functools
 import traceback
-import hashlib
 
 __all__ = ['myassert', 'acdump', 'acdebug', 'acinfo', 'acwarning', 'acerror',
            'time_to_min_sec_msec_tuple', 'time_to_min_sec_hsec_tuple',
@@ -500,13 +499,18 @@ def simulate_crappy_connection():
 
     socket.socket = SocketWrapper
 
+dbGuidMapper = None
 def guidhasher(guid):
+    global dbGuidMapper
+    if dbGuidMapper is None:
+        import ptracker_lib.DBGuidMapper
+        dbGuidMapper =  ptracker_lib.DBGuidMapper.dbGuidMapper
     if guid is None:
         return None
     if not guid.startswith("sha256#") and guid != "":
-        m = hashlib.sha256()
-        m.update(guid.encode())
-        guid = "sha256#" + m.hexdigest()
+        guid_new = dbGuidMapper.raw_hash(guid)
+        dbGuidMapper.register_guid_mapping(guid, guid_new)
+        guid = guid_new
     return guid
 
 if 0:

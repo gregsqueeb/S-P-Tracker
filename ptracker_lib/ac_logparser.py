@@ -44,7 +44,6 @@ class ACLogParser:
         except:
             self._guid = None
         if not self._guid is None:
-            self._guid = guidhasher(self._guid)
             acinfo("Acquired steam guid from AC log file: '%s'", self._guid)
         else:
             acwarning("Cannot acquire steam guid from AC log file.")

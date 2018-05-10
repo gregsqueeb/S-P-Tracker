@@ -52,6 +52,7 @@ from ptracker_lib.message_types import *
 from ptracker_lib.helpers import *
 from ptracker_lib.constants import *
 from ptracker_lib.lap_collector import fromLapHistory
+from ptracker_lib.DBGuidMapper import dbGuidMapper
 
 def acquire_lock(func):
 
@@ -653,7 +654,6 @@ class ACMonitor:
 
     @acquire_lock
     def signin(self, trackname, guid, car, ac_version, pt_version, track_checksum, car_checksum):
-        guid = guid
         if trackname == '':
             # initial signin
             myassert( car == '' and ac_version == '' and track_checksum == '' and car_checksum == '' )
@@ -709,7 +709,6 @@ class ACMonitor:
 
     @acquire_lock
     def get_player_name(self, guid):
-        guid = guid
         d = self.allDrivers.byGuidAll(guid)
         if len(d) > 0:
             return d[0].name
@@ -941,7 +940,6 @@ class ACMonitor:
     @acquire_lock
     def sendMessageToPlayer(self, guid, text, color, mtype, addToLog=True):
         acdebug("smtp: guid in =%s", guid)
-        guid = (guid)
         ptracker_guids = [(d.guid) for d in self.allDrivers.allDriversWithPtracker()]
         d = self.allDrivers.byGuidActive((guid))# dbGuidMapper.guid_orig
         acdebug("smtp: len(pt_guids)=%d d=%s", len(ptracker_guids), str(d))
@@ -1870,23 +1868,6 @@ def onChat(acmonitor, database, guid, message):
                 num_warnings_left = config.config.SWEAR_FILTER.num_warnings - d.receivedBadWordWarnings
                 message = config.config.SWEAR_FILTER.warning % locals()
                 acmonitor.sendChatMessageToPlayer(d.guid, message)
-
-class DBGuidMapper:
-    def __init__(self):
-        self.map_orig_to_new = {}
-        self.map_new_to_orig = {}
-
-    def register_guid_mapping(self, guid_orig, guid_new):
-        self.map_orig_to_new[guid_orig] = guid_new
-        self.map_new_to_orig[guid_new] = guid_orig
-
-    def guid_orig(self, guid_new):
-        return self.map_new_to_orig.get(guid_new, guid_new)
-
-    def guid_new(self, guid_orig):
-        return self.map_orig_to_new.get(guid_orig, guid_orig)
-
-dbGuidMapper = DBGuidMapper()
 
 def run(dbBackend):
     acmonitor = None
