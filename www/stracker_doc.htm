@@ -104,23 +104,9 @@ tar xvzf stracker_linux_x86.tgz</pre>
     <h3>Blacklist support</h3>
     
     <h4>Traditional blacklist support</h4>
-    There is the option for admining the AC server's blacklist directly with stracker. 
-    The setup of the banlist admining requires the following settings in the <code>stracker.ini</code> file:
-    <pre>
-[HTTP_CONFIG]
-enabled = True
-admin_username = your_user_name
-admin_password = your_password
-[BLACKLIST]
-blacklist_file = C:\path\to\blacklist.txt</pre>
-    The first options are already discussed in the HTTP server section. The <code>blacklist_file</code> option
-    must point to the blacklist.txt file of the AC server.<br>
-    When stracker is started with these setting, it first imports the blacklist.txt file and for each listed 
-    guid, it adds this guid to the Blacklist table of the database. The ban list can be altered using the 
-    http server. You have to log into admin mode (upper right button) and when you view a player's details 
-    (via Player <span class="glyphicon glyphicon-arrow-right"></span> Click on player), you will get options 
-    to alter the player's ban state. 
-
+    
+    Traditional blacklist support has been removed with version 3.5.0.
+    
     <h4>Blacklist support in combination with acauth</h4>
     There is also the possibility to use the authentication feature for blacklist support and not use
     a blacklist.txt file for the server. Note that you have to issue your bans through stracker's http
