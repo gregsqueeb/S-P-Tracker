@@ -1610,7 +1610,7 @@ class GenericBackend(DbSchemata):
             elif orderby == 'drivername':
                 order_stmt = "ORDER BY Name"
             else: # orderby == 'lastseen':
-                order_stmt = "ORDER BY PisId IS NULL, PisId DESC"
+                order_stmt = "ORDER BY PisId DESC " + self.nullslast
             if inWhitelist:
                 if search_stmt == "":
                     search_stmt = "WHERE"
