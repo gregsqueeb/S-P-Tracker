@@ -1731,7 +1731,7 @@ def onCommand(acmonitor, database, guid, command):
         for g in groups:
             if g['name'] == 'admins':
                 adminids.add(g['groupid'])
-        plyDetails = database.playerDetails(__sync=True, guid=dbGuidMapper.guid_orig(guid))()
+        plyDetails = database.playerDetails(__sync=True, guid=dbGuidMapper.guid_new(guid))()
         check = len(adminids.intersection(set(plyDetails['memberOfGroup']))) > 0
         acdebug("onCommand; guid info: guid_in=%s plyDetails=%s admin=%d", guid, plyDetails, check)
     else:
