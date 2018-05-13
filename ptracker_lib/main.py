@@ -212,16 +212,16 @@ class PersonalHotlaps:
                     k = list(self.results.keys())[ir]
                     guid,playerName,isAI=k
                     rf = not self.results[k][0] in [0, None]
-                    positions.append({'steamGuid':guid, 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':rf, 'finishTime':None})
+                    positions.append({'steamGuid':guidhasher(guid), 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':rf, 'finishTime':None})
             else: # race
                 for k in self.results:
                     guid,playerName,isAI=k
-                    positions.append({'steamGuid':guid, 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':1, 'finishTime':self.results[k]})
+                    positions.append({'steamGuid':guidhasher(guid), 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':1, 'finishTime':self.results[k]})
                 for i in self.opponents_order:
                     lc = self.lapCollectors[i]
                     guid,playerName,isAI = lc.playerId()
                     if not (guid,playerName,isAI) in self.results:
-                        positions.append({'steamGuid':guid, 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':0, 'finishTime':None})
+                        positions.append({'steamGuid':guidhasher(guid), 'playerName':playerName, 'playerIsAI':isAI, 'raceFinished':0, 'finishTime':None})
             acdebug("Finishing last session with final positions:")
             for i,p in enumerate(positions):
                 s = ""
@@ -451,9 +451,9 @@ class PersonalHotlaps:
         return res
 
     def queryBestTimes(self, trackname, carname):
-        self.bestLapRef = self.dataBase.getBestLap(trackname=trackname, carname=carname, playerGuid=self.guid())
-        self.deltaLapRef = self.dataBase.getBestLap(trackname=trackname, carname=carname, playerGuid=self.guid(), assertHistoryInfo=True)
-        self.bestSectorTimesRef = self.dataBase.getBestSectorTimes(trackname=trackname, carname=carname, playerGuid=self.guid())
+        self.bestLapRef = self.dataBase.getBestLap(trackname=trackname, carname=carname, playerGuid=guidhasher(self.guid()))
+        self.deltaLapRef = self.dataBase.getBestLap(trackname=trackname, carname=carname, playerGuid=guidhasher(self.guid()), assertHistoryInfo=True)
+        self.bestSectorTimesRef = self.dataBase.getBestSectorTimes(trackname=trackname, carname=carname, playerGuid=guidhasher(self.guid()))
         self.bestLapWithSectorsRef = self.dataBase.getBestLapWithSectors(trackname=trackname, carname=None, assertValidSectors=self.sim_info_obj.static.sectorCount)
 
     def updateBestTimes(self):
@@ -530,7 +530,7 @@ class PersonalHotlaps:
                                         track=self.getTrackName(),
                                         artint=0,
                                         cars=cars,
-                                        ego_guid=self.guid(),
+                                        ego_guid=guidhasher(self.guid()),
                                         valid=valid,
                                         minSessionStartTime=minSessionStartTime)
         acdebug("queried %d lap stat entries", limit[1])
@@ -546,7 +546,7 @@ class PersonalHotlaps:
                                             minSessionStartTime=minSessionStartTime,
                                             minNumPlayers=minNumPlayers,
                                             multiplayer=multiplayer,
-                                            ego_guid=self.guid())
+                                            ego_guid=guidhasher(self.guid()))
         acdebug("queried %d lap stat entries", limit[1])
 
     def queryLapInfo(self, remote, lapId):
@@ -905,7 +905,7 @@ class PersonalHotlaps:
                             self.dataBase.registerLap(trackChecksum=trackid,
                                                       carChecksum=carid,
                                                       acVersion=acVersion,
-                                                      steamGuid=guid,
+                                                      steamGuid=guidhasher(guid),
                                                       playerName=playerName,
                                                       playerIsAI=isAI,
                                                       lapHistory=lapHistory,
@@ -942,7 +942,7 @@ class PersonalHotlaps:
                             remoteDB.registerLap(trackChecksum=trackid,
                                                  carChecksum=carid,
                                                  acVersion=acVersion,
-                                                 steamGuid=guid,
+                                                 steamGuid=guidhasher(guid),
                                                  playerName=playerName,
                                                  playerIsAI=isAI,
                                                  lapHistory=lapHistory,

@@ -62,7 +62,7 @@ function applySelections() {
                         <th>Driver name</th>
                         <th>Online</th>
 % if features['admin']:
-                        <th>Steam GUID</th>
+                        <th>Steam GUID Hash</th>
 %    if features['banlist']:
                         <th>Ban count</th>
                         <th>Banned until</th>
@@ -78,7 +78,7 @@ function applySelections() {
                         <td>{{r['name']}}</td>
                         <td>{{'@' + r['isOnline'] if not r['isOnline'] is None else '-'}}</td>
 % if features['admin']:
-                        <td>{{r['guid']}}</td>
+                        <td>{{"..." + r['guid'][-10:]}}</td>
 %    if features['banlist']:
                         <td>{{r['banCount'] if not r['banCount'] is None else '-'}}</td>
                         <td>{{format_datetime(unixtime2datetime(r['bannedUntil']),onlyDate=True) if not r['bannedUntil'] is None else '-'}}</td>
@@ -123,7 +123,7 @@ plyDetailsTemplate = SimpleTemplate("""
                     <tr><td>Name</td><td>{{entry(ply['info']['name'])}}</td></tr>
                     <tr><td>Driver type</td><td>{{['human driver', 'artificial intelligence'][ply['info']['artint']]}}</td></tr>
 % if features['admin']:
-                    <tr><td>Steam GUID</td><td>{{ply['info']['steamguid']}}</td></tr>
+                    <tr><td>Steam GUID Hash</td><td>{{"..." + ply['info']['steamguid'][-10:]}}</td></tr>
                     <tr><td>Whitelisted</td><td>{{entry(ply['info']['whitelisted'])}}</td></tr>
 % end
                 </tbody>

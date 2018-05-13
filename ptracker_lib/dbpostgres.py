@@ -132,6 +132,7 @@ if postgresqlSupport:
             db = psycopg2.connect(user=user, password=password, host=host, database=database)
             self.blob = "BYTEA"
             self.primkey = "SERIAL PRIMARY KEY"
+            self.nullslast = "NULLS LAST"
             GenericBackend.__init__(self, lapHistoryFactory, MySQLConWrapper(db), perform_backups, force_version=force_version)
 
         def selectOrderedAggregate(self, non_agg_field, agg_field, agg_field_name, table_name):
@@ -241,7 +242,7 @@ if __name__ == "__main__":
         backend.newSession(trackname='track1', carnames=('car1', 'car2'), sessionType='race', multiplayer=False,
                        numberOfLaps=7, duration=0, server='server1', sessionState={})
         backend.registerLap(trackChecksum='ts1', carChecksum='cs1', acVersion='none',
-                        steamGuid='myguid', playerName='.Pfalz.Ulrika Eleonora den ÃƒÂ¤ldre', playerIsAI=0,
+                        steamGuid='myguid', playerName='.Pfalz.Ulrika Eleonora den ÃƒÆ’Ã‚Â¤ldre', playerIsAI=0,
                         lapHistory=dlh, tyre='tyre1', lapCount=0, sessionTime=0, fuelRatio=0.4, valid=True, carname='car1', staticAssists={}, dynamicAssists={},
                         maxSpeed = 100.0, timeInPitLane = 1, timeInPit = 2, teamName = None, escKeyPressed=False,
                         gripLevel = 0.5, collisionsCar=1, collisionsEnv=2, cuts=3)

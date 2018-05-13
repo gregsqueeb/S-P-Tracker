@@ -1,0 +1,127 @@
+<!-- title="CPU Load" nav="sysstat" index=0 sections=auto -->
+
+<div>
+% import pysar
+% import pygal
+% import glob
+%
+% files = glob.glob(r"/var/log/sysstat/sa[0-9]*")
+% if len(files) == 0:
+%   files = glob.glob(r"D:\AC_dev\ptracker-3.1.x\www\sarout\*.sadf")
+%   sar = pysar.SAR(files, sadf_call=['type'])
+% else:
+%   sar = pysar.SAR(files)
+% end
+%
+% signals = sar.signals()
+%
+% print(kw)
+% max_items = int(kw.get('max_items', 300))
+% from_hours = int(kw.get('from_hours', 24))
+% to_hours = int(kw.get('to_hours', 0))
+%
+% def create_stacked_graph(title, signals, legend = lambda s: s.split("--")[0].split("/")[-1]):
+%   graph = pygal.StackedLine(title=title, fill=True, show_dots=False, x_labels_major_count=5, show_minor_x_labels=False, truncate_label=-1, include_x_axis=True)
+%   for s in signals:
+%     parts = [subs.strip() for subs in s.split("--")]
+%     xy = sar.get(parts, [from_hours, to_hours], max_items)
+%     graph.add(legend(s), [i[1] for i in xy])
+%     x = [i[0] for i in xy]
+%   end
+%   graph.x_labels = ["%.1f h"%i for i in x]
+%   return graph
+% end
+%
+% cpu_signals = sorted(filter(lambda s: s.startswith("cpu-load-all/all/"), signals))
+% cpu_graph = create_stacked_graph("CPU", cpu_signals[::-1])
+%
+% mem_signals = ["memory/memused -- memory/buffers -- memory/cached", "memory/buffers", "memory/cached", "memory/memfree", "memory/swpused", "memory/swpfree"]
+% mem_graph = create_stacked_graph("MEM", mem_signals)
+%
+% pck_per_s_signals_eth0 = ["network/net-dev/eth0/rxpck", "network/net-dev/eth0/txpck"]
+% pck_per_s_graph_eth0 = create_stacked_graph("ETH0 PACKET/s", pck_per_s_signals_eth0) 
+%
+% pck_per_s_signals_lo = ["network/net-dev/lo/rxpck", "network/net-dev/lo/txpck"]
+% pck_per_s_graph_lo = create_stacked_graph("LO PACKET/s", pck_per_s_signals_lo) 
+%
+% kb_per_s_signals_eth0 = ["network/net-dev/eth0/rxkB", "network/net-dev/eth0/txkB"]
+% kb_per_s_graph_eth0 = create_stacked_graph("ETH0 kB/s", kb_per_s_signals_eth0)
+%
+% kb_per_s_signals_lo = ["network/net-dev/lo/rxkB", "network/net-dev/lo/txkB"]
+% kb_per_s_graph_lo = create_stacked_graph("LO kB/s", kb_per_s_signals_lo)
+%
+    <div class="row">
+        <div class="col-md-12">
+            <form class="form-inline" action="#">
+                <div class="form-group">
+                    <label for="from_hours">from</label>
+                    <select class="form-control" id="from_hours" name="from_hours">
+                        <option {{!"selected" if from_hours == 6   else ""}} value="6"  >6 hours</option>
+                        <option {{!"selected" if from_hours == 12  else ""}} value="12" >12 hours</option>
+                        <option {{!"selected" if from_hours == 24  else ""}} value="24" >1 day</option>
+                        <option {{!"selected" if from_hours == 48  else ""}} value="48" >2 days</option>
+                        <option {{!"selected" if from_hours == 168 else ""}} value="168">1 week</option>
+                        <option {{!"selected" if from_hours == 336 else ""}} value="336">2 weeks</option>
+                        <option {{!"selected" if from_hours == 672 else ""}} value="672">4 weeks</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="to_hours">to</label>
+                    <select class="form-control" id="to_hours" name="to_hours">
+                        <option {{!"selected" if to_hours == 0   else ""}} value="0"  >now</option>
+                        <option {{!"selected" if to_hours == 6   else ""}} value="6"  >6 hours</option>
+                        <option {{!"selected" if to_hours == 12  else ""}} value="12" >12 hours</option>
+                        <option {{!"selected" if to_hours == 24  else ""}} value="24" >1 day</option>
+                        <option {{!"selected" if to_hours == 48  else ""}} value="48" >2 days</option>
+                        <option {{!"selected" if to_hours == 168 else ""}} value="168">1 week</option>
+                        <option {{!"selected" if to_hours == 336 else ""}} value="336">2 weeks</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="max_items">max items</label>
+                    <select class="form-control" id="max_items" name="max_items">
+                        <option {{!"selected" if max_items == 150  else ""}} value="150" >150 data points</option>
+                        <option {{!"selected" if max_items == 300  else ""}} value="300" >300 data points</option>
+                        <option {{!"selected" if max_items == 600  else ""}} value="600" >600 data points</option>
+                        <option {{!"selected" if max_items == 1200 else ""}} value="1200">1200 data points</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-default">Submit</button>
+            </form>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            {{!cpu_graph.render()}}
+        </div>
+        <div class="col-md-6">
+            {{!mem_graph.render()}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{!pck_per_s_graph_eth0.render()}}
+        </div>
+        <div class="col-md-6">
+            {{!kb_per_s_graph_eth0.render()}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            {{!pck_per_s_graph_lo.render()}}
+        </div>
+        <div class="col-md-6">
+            {{!kb_per_s_graph_lo.render()}}
+        </div>
+    </div>
+</div>
+% del sar
+% del cpu_graph
+% del mem_graph
+% del pck_per_s_graph_eth0
+% del kb_per_s_graph_eth0
+% del pck_per_s_graph_lo
+% del kb_per_s_graph_lo
+% import gc
+% gc.collect()

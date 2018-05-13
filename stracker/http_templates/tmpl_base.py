@@ -249,28 +249,6 @@ baseTemplate = SimpleTemplate("""
 <nav class="navbar navbar-{{!navbar_style}} navbar-fixed-bottom">
     <div class="container-fluid">
        <div class="col-sm-3">
-% if features['flattr'] or features['paypal']:
-          <p class="navbar-text">
-% end
-% if features['flattr']:
-            <a href="https://flattr.com/submit/auto?
-user_id=Neys&url=http://www.racedepartment.com/downloads/stracker.3510/&
-title=stracker%20and%20ptracker&
-description=Assetto%20Corsa%20Lap%20And%20Race%20Tracker%20App%20Suite&
-language=en_GB&tags=Assetto%20Corsa,apps&category=software">
-<img src="https://api.flattr.com/button/flattr-badge-large.png"
-  alt="Flattr stracker and ptracker" />
-</a>
-% end
-% if features['paypal']:
-            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XJYABPHR59KFN">
-                <img src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif"
-                 alt="Donate" />
-            </a>
-% end
-% if features['flattr'] or features['paypal']:
-          </p>
-% end
        </div>
 
         <div style="text-align:center" class="col-sm-6">

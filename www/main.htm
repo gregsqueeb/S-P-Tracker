@@ -1,0 +1,138 @@
+<!-- title="[sp]tracker" nav="Home" index=0 sections=auto  -->
+
+  <div>
+    <h1>stracker and ptracker</h1>
+    <p class="lead"><i>stracker</i> and <i>ptracker</i> are apps for the race simulator 
+    <a href=http://www.assettocorsa.net>Assetto Corsa</a>. </p><p><i>stracker</i> is the server-side 
+    portion and <i>ptracker</i> is for the client side (i.e., it runs in the game). Both apps 
+    aim to improve your online experience. It is not required to always have both instances 
+    running - <i>stracker</i> can be used without all drivers using <i>ptracker</i> and vice 
+    versa. However, you get the best experience when both are running.
+    <h2>ptracker</h2>
+    <h3>Main Window</h3>
+    <p>The client app provides a window in the game with 3 sections: The hotlap section, 
+    the leaderboard section and the message section. Each section is highly customizable,
+    you decide about the information displayed on your screen.</p>
+    <img src="images/ptracker-screen-1.png" class="img-responsive center-block" alt="Responsive image">
+    <p>
+    <ul>
+        <li>The <b>hotlap section</b> shows information about the current lap. The hotlap line is 
+            shown here in its default configuration:<br><br>
+            <img src="images/ptracker-screen-2.png" class="img-responsive center-block" alt="Responsive image">
+            <br>
+            <ol>
+                <li>Live delta / lap time / pit time display</li>
+                <li>Lap validness display (green: lap valid, red: lap invalid)</li>
+                <li>Split delta</li>
+                <li>Sector delta</li>
+                <li>Connection status (gray: not connected, green: stracker connection established, yellow: setup available for download)</li>
+                <li>Session progress (qualification/practice: time left, race: &lt;current lap&gt;/&lt;number of laps&gt;)</li>
+                <li>Fuel indicator (gray: fuel for more than 3 laps left, yellow: fuel for 1 to 3 laps left, blinking: less than 1 lap left)</li>
+                <li>Fuel prediction (number of laps left). ('-' if no fuel prediction is available)</li>
+            </ol>
+        </li>
+        <li>The <b>leaderboard section</b> shows the current leaderboard with current rank, car badge,
+        tyre, name, relative deltas, best lap times and more.</li>
+        <li>The <b>message section</b> shows chat messages and messages from ptracker and stracker, such as
+        personal best lap times, server best lap times, players entering and leaving the server, etc.
+        The message section can be detached from the other two sections, so that you can place it 
+        independently on your screen.
+        </li>
+    </ul>
+    </p>
+    <h3>Chat functionality</h3>
+    <p><i>ptracker</i> has a chat feature built in accessable with hot keys. You can open a chat editor
+    by pressing Alt&plus;T (of course you can change the keys in the configuration dialog). There are 9 
+    predefined messages mapped to the number pad keys 1 to 9 (NumLock has to be enabled):
+    <table class="table">
+        <tbody>
+        <tr>
+            <td><b>7</b> hi</td>
+            <td><b>8</b> thank you!</td>
+            <td><b>9</b> bye</td>
+        </tr>
+        <tr>
+            <td><b>4</b> good race</td>
+            <td><b>5</b> good pass</td>
+            <td><b>6</b> sorry</td>
+        </tr>
+        <tr>      
+            <td><b>1</b> :)</td>
+            <td><b>2</b> :D</td>
+            <td><b>3</b> :(</td>
+        </tr>
+        </tbody>
+    </table>
+    </p>
+    <h3>Dialogs</h3>
+    <p>Additionally, there is a dialog with more detailed information and customization. You activate this
+    by either double clicking on the hotlap section or by a single click on the connection icon. The dialog
+    can be closed by clicking on the icon in the top left. The dialog has the following sections:
+    <ul>
+        <li>
+            The <b>Lap Stats</b> section shows information about the best laps achieved. The information
+            is either gathered from a database on the client machine, or (if available) from <i>stracker</i>.
+            The information source is indicated in the lower right. You can set various filters in this 
+            dialog. You can click on a lap to get more detailed information. You can navigate through
+            the ranking with the buttons on the lower screen (go to top, one page up, go to my rank, 
+            one page down, go to bottom).
+            <img src="images/ptracker-screen-3.png" class="img-responsive center-block" alt="Responsive image"> 
+            </li>
+        <li>Similarly, the <b>Session Stats</b> section shows information about recent sessions.</li>
+        <li>The <b>Config</b> section is the central place to configure the behaviour of <i>ptracker</i>.
+            You have loads of possibilities to change the behaviour.
+            <img src="images/ptracker-screen-4.png" class="img-responsive center-block" alt="Responsive image"> 
+            </li>
+        <li>The <b>Setups/Players</b> section provides an interface to share setups in various ways.
+            This functionality is limited for servers running <i>stracker</i>. Server admins may also
+            use this page for kicking bad drivers.</li>
+        <li>The <b>Database</b> section provides an interface for controlling the local database.</li>
+    </ul>
+    </p>
+    <h3>Performance</h3>
+    <p>During the development of ptracker, a lot of effort has been spent to make it as efficient as
+       possible and to keep the in-game FPS as high as possible. This is the reason why ptracker is 
+       split up into two parts, a normal python app running in the Assetto Corsa game and an exe file
+       which is automatically started from the python app.</p>
+    <h2>stracker</h2>
+    <p>The server-side app automatically stores all laps, sessions and drivers in a database on the server.
+    It can provide web pages with interesting information for access with a browser. See the 
+    <a href="neys_servers"> NEYS AC server</a> statistics for an example.
+    </p>
+    <h3>HTML Output</h3>
+    <p>
+    The HTML output of stracker features the following items:
+    <ul>
+        <li><b>Lap Times</b>. Ranking of a track/car combination with various filters (accessable 
+        by the '+' button). You can click on any lap to get more detailed information.</li>
+        <li><b>Sessions</b>. History of sessions. You can click on any session to get the
+        leaderboard information. Furthermore, clicking on a driver in the leaderboard provides
+        you with the laps of the driver, and of course you can get the details for all the laps.</li>
+        <li><b>Drivers</b>. List of all drivers seen on the server.</li>
+        <li><b>Championships</b>. Championship ranking (for leagues).</li>
+        <li><b>Statistics</b>. Server statistics.</li>
+        <li><b>Live Map</b>. Live view of current server activity.</li>
+        <li><b>Admin Area</b>. Admins can access this area for performing a number of tasks:
+            <ul>
+                <li>Manual lap invalidation, e.g., when there were cheaters online.</li>
+                <li>Driver management (adding to banlists, etc.)</li>
+                <li>Championship management.</li>
+                <li>Group management.</li>
+                <li>General administration.</li>
+            </ul>
+        </li>
+    </ul>
+    </p>
+    <h3>Multiserver support</h3>
+    <p>
+    A lot of communities offer multiple AC servers. <i>stracker</i> supports these setups with
+    flexible configuration options. You choose if you wish to keep all servers in one database,
+    or have a seperate DB for each one.
+    </p>
+    <h3>Database backends</h3>
+    <p>
+    There are two database backends supported: sqlite and postgresql. While sqlite has its strengths in
+    its ease of use, the postgresql database is a natural choice for larger setups. You can switch between
+    these database backends at any time.
+    </p>
+  </div>

@@ -148,6 +148,7 @@ class SqliteBackend(GenericBackend):
         acinfo("Using database '%s'" % dbname)
         self.blob = "BLOB"
         self.primkey = "INTEGER PRIMARY KEY"
+        self.nullslast = ""
         db = apsw.Connection(dbname)
         db.setbusyhandler(self.busy)
         GenericBackend.__init__(self, lapHistoryFactory, ApswConnectionWrapper(db), perform_backups, force_version=force_version)

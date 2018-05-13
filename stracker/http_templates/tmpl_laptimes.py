@@ -563,7 +563,7 @@ function confirmDBChangeBeforeLink(l, msg)
                     <tr><td>Name</td><td>{{lapdetails['name']}}</td></tr>
                     <tr><td>Driver type</td><td>{{['human driver', 'artificial intelligence'][lapdetails['artint']]}}</td></tr>
 % if features['admin']:
-                    <tr><td>Steam GUID</td><td>{{lapdetails['steamguid']}}</td></tr>
+                    <tr><td>Steam GUID Hash</td><td>{{"..." + lapdetails['steamguid'][-10:]}}</td></tr>
 % end
                     <tr><td>Track</td><td>{{lapdetails['uitrack']}}</td></tr>
                     <tr><td>Car</td><td>{{!car_tmpl.render(car=lapdetails['car'], uicar=lapdetails['uicar'])}}</td></tr>

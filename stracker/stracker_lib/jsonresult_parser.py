@@ -11,14 +11,14 @@ class JsonResults:
     def isRace(self):
         return self._R["Type"] == "RACE"
 
-    def racePositions(self):
-        guid = [x['DriverGuid'] for x in self._R["Result"]]
+    def racePositions(self, dbGuidMapper):
+        guid = [dbGuidMapper.guid_new(x['DriverGuid']) for x in self._R["Result"]]
         model = [x['CarModel'] for x in self._R["Result"]]
         drivers = list(zip(guid,model))
         totaltime = [int(x['TotalTime']) for x in self._R["Result"]]
         numlaps = [0] * len(self._R["Result"])
         for l in self._R["Laps"]:
-            d = (l["DriverGuid"], l["CarModel"])
+            d = (dbGuidMapper.guid_new(l["DriverGuid"]), l["CarModel"])
             if d in drivers:
                 numlaps[drivers.index(d)] += 1
         result = {}

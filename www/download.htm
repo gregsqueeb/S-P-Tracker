@@ -1,0 +1,82 @@
+<!-- title="Download" nav="Download" index=1 sections=stable+"Stable versions",experimental+"Experimental versions" -->
+% import os.path
+% import glob
+
+  <div>
+    <h1>Downloads</h1>
+    <div class="col-md-12">
+        <div class="panel panel-warning">
+            <div class="panel-heading"><h2>Terms of use</h2></div>
+            <div class="panel-body">        
+                These apps can be used free of charge. Modification or redistribution of the app is allowed only with explicit 
+                permission from the author Neys at Assetto Corsa support forums or at racedepartment.com. Use at own risk.
+            </div>
+        </div>
+    </div>
+    <div id="stable" class="col-md-12">
+        <div class="panel panel-success">
+            <div class="panel-heading"><h2>Stable versions</h2></div>
+            <div class="panel-body">        
+                Find the stable downloads of ptracker and stracker in the links below.
+            </div>
+        </div>
+    </div>
+% for p,desc,warn in [("/downloads/ptracker/stable/", "ptracker", False),
+%                     ("/downloads/stracker/stable/", "stracker", False),
+%                     ("/downloads/ptracker/experimental/", "ptracker", True),
+%                     ("/downloads/stracker/experimental/", "stracker", False),]:
+% if warn:
+    <div class="col-md-12">
+    <hr>
+        <div id="experimental" class="panel panel-danger">
+            <div class="panel-heading"><h2>Experimental versions</h2></div>
+            <div class="panel-body">        
+                Please use the experimental versions only if you are prepared to accept some 
+                instabilities and bugs. If you want a system running stable and flawlessly, 
+                you'd better use the stable versions above.
+            </div>
+        </div>
+    </div>
+% end
+    <div class="col-md-6">
+        <h2>{{desc}}</h2>
+        <table class="table table-striped table-condensed table-bordered table-hover">
+            <thead>
+                <th>Version</th>
+                <th>Size</th>
+                <th>Downloads</th>
+            </thead>
+            <tbody>
+% import re
+% def sorted_nicely( l, **kwargs ): 
+%    """ Sort the given iterable in the way that humans expect.""" 
+%    convert = lambda text: int(text) if text.isdigit() else text 
+%    alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+%    return sorted(l, key = alphanum_key, **kwargs)
+% end
+% files = sorted_nicely(glob.glob(server.managed_dir + p + "*.exe")+glob.glob(server.managed_dir + p + "*.zip"), reverse=True)
+% for f in files:
+%   version = os.path.splitext(os.path.basename(f))[0]
+%   link = server.link_from_file(f)
+%   downloads = server.get_num_downloads(link)
+%   size = os.path.getsize(f)
+%   unit = "B"
+%   if size > 1024: 
+%      size = float(size)/1024.
+%      unit = "kB"
+%   end
+%   if size > 1024:
+%      size = float(size)/1024.
+%      unit = "MB"
+%   end
+                <tr>
+                    <td><a href="{{!link}}">{{version}}</a></td>
+                    <td>{{"%d %s"%(size, unit)}}</td>
+                    <td>{{downloads}}</td>
+                </tr>
+% end
+            </tbody>
+        </table>
+    </div>
+%end
+  </div>

@@ -27,6 +27,7 @@ except ImportError:
 from threading import Thread
 from ptracker_lib.helpers import *
 from ptracker_lib.message_types import *
+from ptracker_lib.DBGuidMapper import dbGuidMapper
 
 class ProtocolError(Exception):
     def __init__(self, value):
@@ -206,7 +207,7 @@ class ProtocolHandler:
     def req_signin(self, trackname, guid, car,
                    ac_version, pt_version,
                    track_checksum, car_checksum):
-        dgram= self._request_pack(self.REQ_SIGNIN, trackname=trackname, guid=guid, car=car,
+        dgram= self._request_pack(self.REQ_SIGNIN, trackname=trackname, guid=dbGuidMapper.guid_orig(guid), car=car,
                                   ac_version=ac_version, pt_version=pt_version,
                                   track_checksum=track_checksum, car_checksum=car_checksum)
         self.socket.sendall(dgram, self.REQ_SIGNIN)
@@ -247,7 +248,7 @@ class ProtocolHandler:
                                   track=track,
                                   artint=artint,
                                   cars=cars,
-                                  ego_guid=ego_guid,
+                                  ego_guid=dbGuidMapper.guid_orig(ego_guid),
                                   valid=valid,
                                   minSessionStartTime=minSessionStartTime)
         self.socket.sendall(dgram,self.REQ_GET_LAP_STATS)
@@ -261,7 +262,7 @@ class ProtocolHandler:
                                    limit=limit,
                                    tracks=tracks,
                                    sessionTypes=sessionTypes,
-                                   ego_guid=ego_guid,
+                                   ego_guid=dbGuidMapper.guid_orig(ego_guid),
                                    minSessionStartTime=minSessionStartTime,
                                    minNumPlayers=minNumPlayers,
                                    multiplayer=multiplayer)
@@ -368,7 +369,7 @@ class ProtocolHandler:
 
     def req_get_server_data(self, guid):
         if self.prot_version >= 3:
-            dgram = self._request_pack(self.REQ_GET_SERVER_DATA, guid=guid)
+            dgram = self._request_pack(self.REQ_GET_SERVER_DATA, guid=dbGuidMapper.guid_orig(guid))
             self.socket.sendall(dgram,self.REQ_GET_SERVER_DATA)
 
     def ans_get_server_data(self, ptracker_instances, session_state, messages):

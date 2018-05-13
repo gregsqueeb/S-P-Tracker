@@ -435,7 +435,7 @@ class GenericBackend(DbSchemata):
                 UPDATE Players SET
                     Name = :playerName,
                     ArtInt = :playerIsAI
-                WHERE SteamGuid=:steamGuid
+                WHERE SteamGuid=:steamGuid AND Anonymized!=1
             """, locals())
             # team
             if teamName is None or teamName.strip() == "":
@@ -1585,7 +1585,7 @@ class GenericBackend(DbSchemata):
                 laps.append(r)
             return {'laps':laps, 'playerInSessioInfo':pisInfo}
 
-    def getPlayers(self, limit, searchPattern = None, inBanList = False, group_id = None, include_groups = False, inWhitelist = False, orderby=None):
+    def getPlayers(self, limit, searchPattern = None, inBanList = False, group_id = None, include_groups = False, inWhitelist = False, orderby=None, anonymized = False):
         with self.db:
             c = CursorDebug(self.db.cursor())
             now = unixtime_now()
@@ -1610,7 +1610,7 @@ class GenericBackend(DbSchemata):
             elif orderby == 'drivername':
                 order_stmt = "ORDER BY Name"
             else: # orderby == 'lastseen':
-                order_stmt = "ORDER BY PisId DESC"
+                order_stmt = "ORDER BY PisId DESC " + self.nullslast
             if inWhitelist:
                 if search_stmt == "":
                     search_stmt = "WHERE"
@@ -1623,6 +1623,12 @@ class GenericBackend(DbSchemata):
                 else:
                     search_stmt += " AND"
                 search_stmt += " GroupId=:group_id"
+            if anonymized:
+                if search_stmt == "":
+                    search_stmt = "WHERE"
+                else:
+                    search_stmt = " AND"
+                search_stmt += " Anonymized = 1"
             limit_stmt = ""
             count = c.execute("""
                 WITH BannedPlayers AS (
@@ -1971,36 +1977,6 @@ class GenericBackend(DbSchemata):
                         SET Duration=:newDur
                         WHERE BlacklistId=:blId
                     """, locals())
-            elif not importedGuid is None:
-                ans = c.execute("SELECT PlayerId FROM Players WHERE SteamGuid=:importedGuid", locals()).fetchone()
-                if ans is None:
-                    c.execute("INSERT INTO Players(SteamGuid,Name,ArtInt) VALUES(:importedGuid,'Imported from blacklist',0)", locals())
-                    playerid=c.lastrowid
-                else:
-                    playerid=ans[0]
-                ans = c.execute("""
-                    SELECT BlacklistId,DateAdded,Duration FROM BlacklistedPlayers
-                    WHERE PlayerId=:playerid AND NOT ((BannedUntil IS NULL) OR BannedUntil <= :now)
-                """, locals()).fetchone()
-                if ans is None:
-                    if extendPeriod is None:
-                        duration=60*60*24*365*5
-                    else:
-                        duration = int(extendPeriod)
-                    c.execute("""
-                        INSERT INTO Blacklist(PlayerId,DateAdded,Duration)
-                        VALUES(:playerid,:now,:duration)
-                    """, locals())
-                else:
-                    if not extendPeriod is None:
-                        blId = ans[0]
-                        dateAdded = ans[1]
-                        newDur = now + extendPeriod - dateAdded
-                        c.execute("""
-                            UPDATE Blacklist
-                            SET Duration=:newDur
-                            WHERE BlacklistId=:blId
-                        """, locals())
             elif not extendPeriod is None:
                 if not blId is None:
                     newDur = now + extendPeriod - dateAdded
@@ -2025,6 +2001,12 @@ class GenericBackend(DbSchemata):
             if blacklisted:
                 reason.append("You are currently blacklisted on this server (until %s)." % (unixtime2datetime(ans[0]).date()))
                 ok = False
+            if preventAnon:
+                ans = c.execute("SELECT Anonymized FROM Players WHERE SteamGuid=:guid", locals()).fetchone()
+                anon = not (ans == 0 or ans is None)
+                if anon:
+                    reason.append("Anonymized players are forbidden on this server.")
+                    ok = False
             ans = c.execute("SELECT Whitelisted FROM Players WHERE SteamGuid=:guid", locals()).fetchone()
             whitelisted = not ans is None and ans[0]
         if not maxTimePercentage is None or not maxRank is None or not minNumLaps is None:
@@ -2572,7 +2554,7 @@ class GenericBackend(DbSchemata):
         with self.db:
             cur = self.db.cursor()
             now = unixtime_now()
-            ans = cur.execute("SELECT PlayerId FROM Players WHERE SteamGUID = :guid", locals()).fetchone()
+            ans = cur.execute("SELECT PlayerId, Anonymized FROM Players WHERE SteamGUID = :guid", locals()).fetchone()
             if ans is None:
                 cur.execute("INSERT INTO Players(SteamGuid, Name) VALUES(:guid, :name)", locals())
                 pid = cur.lastrowid
@@ -2638,6 +2620,38 @@ class GenericBackend(DbSchemata):
                 if not set_rating is None:
                     cur.execute("INSERT INTO MinoratingCache(PlayerId,Timestamp,Minorating) SELECT PlayerId, :now, :set_rating FROM Players WHERE SteamGuid=:guid", locals())
             return res.lower() if not res is None else ''
+
+    def anonymize(self, guid, name, enabled):
+        with self.db:
+            cur = self.db.cursor()
+            acdebug("anon: get playerid")
+            cur.execute("SELECT PlayerId FROM Players WHERE SteamGuid = :guid", locals())
+            pid = cur.fetchone()
+            if pid is None:
+                return False
+            pid = pid[0]
+            acdebug("anon: update 1")
+            if enabled != "status":
+                if enabled:
+                    enabled = 1
+                else:
+                    enabled = 0
+                cur.execute("UPDATE Players SET Anonymized = :enabled WHERE PlayerId = :pid", locals())
+                if enabled:
+                    acdebug("anon: update 2")
+                    cur.execute("UPDATE Players SET Name = '<anonymized>' WHERE PlayerId = :pid", locals())
+                    acdebug("anon: delete chat")
+                    cur.execute("DELETE FROM ChatHistory WHERE PlayerId = :pid", locals())
+                    acdebug("anon: delete chat finished")
+                else:
+                    acdebug("anon: update 3")
+                    cur.execute("UPDATE Players SET Name = :name WHERE PlayerId = :pid", locals())
+            acdebug("anon: get status")
+            try:
+                status = cur.execute("SELECT Anonymized FROM Players WHERE SteamGuid = :guid", locals()).fetchone()
+            except Exception as e:
+                acerror(str(e))
+            return status[0] if not status is None else True
 
     def populate(self, other):
         def arg_list(n):

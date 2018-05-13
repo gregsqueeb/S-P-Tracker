@@ -263,6 +263,7 @@ if not ptracker_only:
     os.chdir("..")
 
     r.write("stracker/README.txt", "README.txt")
+    r.write("www/stracker_doc.htm", "stracker/documentation.htm")
     r.write("stracker/start-stracker.cmd", "start-stracker.cmd")
 
     http_data = (glob.glob("stracker/http_static/bootstrap/*/*") +
