@@ -1944,6 +1944,9 @@ class GenericBackend(DbSchemata):
             c = self.db.cursor()
             # assert that player is existing
             if c.execute("SELECT PlayerId FROM Players WHERE SteamGuid=:guid", locals()).fetchone() is None:
+                if newVal is None:
+                    # don't create a new player at the first message sent
+                    return False
                 c.execute("INSERT INTO Players(SteamGuid,Name) VALUES(:guid,:name)", locals())
             if not newVal is None:
                 c.execute("UPDATE Players SET MessagesDisabled=:newVal WHERE SteamGuid=:guid", locals())
