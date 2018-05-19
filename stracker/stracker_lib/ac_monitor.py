@@ -938,12 +938,12 @@ class ACMonitor:
                 self.sendMessageToPlayer(d.guid, text, color, mtype, addToLog=False)
 
     @acquire_lock
-    def sendMessageToPlayer(self, guid, text, color, mtype, addToLog=True):
+    def sendMessageToPlayer(self, guid, text, color, mtype, addToLog=True, forceChat=False):
         acdebug("smtp: guid in =%s", guid)
         ptracker_guids = [(d.guid) for d in self.allDrivers.allDriversWithPtracker()]
         d = self.allDrivers.byGuidActive((guid))# dbGuidMapper.guid_orig
         acdebug("smtp: len(pt_guids)=%d d=%s", len(ptracker_guids), str(d))
-        if guid in ptracker_guids:
+        if guid in ptracker_guids and not forceChat:
             d.pending_messages.append({'text':text, 'color':color, 'type':mtype})
             self.newServerDataAvailable.add(guid)
             if addToLog:
@@ -1246,19 +1246,21 @@ class ACMonitor:
 
     @acquire_lock
     def sendWelcomeMsg(self, guid):
-        for i in range(3):
+        for i in range(6):
             line = getattr(config.config.WELCOME_MSG, "line%d"%(i+1))
             if line != '':
                 self.sendMessageToPlayer(guid=guid,
                                          text=line % {'version':version},
                                          color=(1.0,1.0,1.0,1.0),
-                                         mtype=MTYPE_WELCOME)
+                                         mtype=MTYPE_WELCOME,
+                                         forceChat=True)
         d = self.allDrivers.byGuidActive(guid)
         if not d is None and d.ptracker_invalid_version:
             self.sendMessageToPlayer(guid=guid,
                                      text="Ptracker/stracker connection not available, because your ptracker version is too old.",
                                      color=(1.0,0.5,0.5,1.0),
-                                     mtype=MTYPE_WELCOME)
+                                     mtype=MTYPE_WELCOME,
+                                     forceChat=True)
         if not d is None and d.ptracker_conn is None:
             disabled = self.database.messagesDisabled(__sync=True, guid=dbGuidMapper.guid_new(guid), name=d.name)()
             msgEnabled = "disabled" if disabled else "enabled"
@@ -1503,7 +1505,7 @@ class ACMonitor:
                 if bestLap == 0 or lapTime < config.config.MESSAGES.best_lap_time_broadcast_threshold/100.*bestLap:
                     self.sendBroadcastMessage(bestLapMessage, bestLapColor, MTYPE_BEST_LAP)
                 else:
-                    self.sendMessageToPlayer(guid, bestLapMessage, bestLapColor, MTYPE_BEST_LAP)
+                    self.sendMessageToPlayer(dbGuidMapper.guid_orig(guid), bestLapMessage, bestLapColor, MTYPE_BEST_LAP)
 
 class STrackerServerHandler(BaseRequestHandler):
     def handle(self):

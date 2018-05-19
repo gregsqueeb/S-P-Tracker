@@ -220,6 +220,9 @@ class Config:
             'line1' : ('Welcome to stracker %(version)s', conf.get, 'First line of welcome message text (if not empty, this text is sent a player when he enters the server'),
             'line2' : ('', conf.get, 'Second line of welcome message text (if not empty, this text is sent a player when he enters the server'),
             'line3' : ('', conf.get, 'Third line of welcome message text (if not empty, this text is sent a player when he enters the server'),
+            'line4' : ('Your activities on this server are tracked. By driving on this server you give consent to store and process', conf.get, 'Fourth line of welcome message text (if not empty, this text is sent a player when he enters the server'),
+            'line5' : ('information like your driver name, steam GUID, chat messages and session statistics. You can anonymize this', conf.get, 'Fifth line of welcome message text (if not empty, this text is sent a player when he enters the server'),
+            'line6' : ('data by typing the chat message "/st anonymize on". You might not be able to join the server again afterwards.', conf.get, 'Sixth line of welcome message text (if not empty, this text is sent a player when he enters the server'),
         }
         self.sections['ACPLUGIN'] = {
             'rcvPort' : (-1, conf.getint, 'udp port the plugins receives from. -1 means to use the AC servers setting UDP_PLUGIN_ADDRESS'),
