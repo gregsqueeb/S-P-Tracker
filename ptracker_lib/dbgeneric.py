@@ -33,7 +33,7 @@ import ptracker_lib
 from ptracker_lib.constants import *
 
 def prof(s, proft):
-    t = time.time()
+    t = time.perf_counter()
     acdebug("profiling %s: %.1f s", s, t-proft)
     return t
 
@@ -155,9 +155,9 @@ if 0:
                 return "%s" % r
         acdebug(re.subn(':([a-zA-Z_0-9]+)', repl, stmt)[0])
         import time
-        t0 = time.time()
+        t0 = time.perf_counter()
         res = self.cur.execute(stmt, replacements)
-        t1 = time.time()
+        t1 = time.perf_counter()
         acdebug("Time used: %.1f secs", t1-t0)
         return res
 else:
@@ -654,7 +654,7 @@ class GenericBackend(DbSchemata):
                 c = self.db.cursor()
                 return self.lapStats( mode, limit, track, artint, cars, ego_guid, valid, minSessionStartTime, tyre_list, server, group_by_guid, groups, cursor=c)
         else:
-            proft = time.time()
+            proft = time.perf_counter()
             startt = proft
             if track is None:
                 acwarning("supplied track value is None. Ignoring query.")
@@ -1089,7 +1089,7 @@ class GenericBackend(DbSchemata):
         if lapid is None:
             return {}
         with self.db:
-            proft = time.time()
+            proft = time.perf_counter()
             startt = proft
             c = self.db.cursor()
             trackMapping = self.trackMapping(c)
@@ -1237,7 +1237,7 @@ class GenericBackend(DbSchemata):
 
     def comparisonInfo(self, lapIds):
         with self.db:
-            t = time.time()
+            t = time.perf_counter()
             c = self.db.cursor()
             trackMapping = self.trackMapping(c)
             carMapping = self.carMapping(c)
@@ -1792,9 +1792,9 @@ class GenericBackend(DbSchemata):
             if 0:
                 def c_execute(*args, **kw):
                     acdebug("Executing SQL:\n        %s", args[0].replace("\n", "\n        "))
-                    t = time.time()
+                    t = time.perf_counter()
                     res = c.execute(*args, **kw)
-                    t = time.time() - t
+                    t = time.perf_counter() - t
                     acdebug("Profiling result: %dm %.1fs" % (t // 60., t % 60.))
                     return res
             else:

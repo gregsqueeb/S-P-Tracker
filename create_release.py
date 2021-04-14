@@ -22,7 +22,7 @@ import shutil
 import subprocess
 import sys
 
-exec(open("remote_settings.py").read())
+exec(open("release_settings.py").read())
 
 test_release_process = False
 if "--test_release_process" in sys.argv:
@@ -73,7 +73,22 @@ if not test_release_process:
 
 version = sys.argv[1]
 
-if not stracker_only and not linux_only:
+# Create virtualenv in case it doesn't exist yet
+subprocess.run(["virtualenv", "env/windows"], check=True, universal_newlines=True)
+
+# Use virtualenv
+exec(open("env/windows/Scripts/activate_this.py").read())
+
+# Install/upgrade packages
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "bottle"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "cherrypy"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "psycopg2"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "python-dateutil"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "wsgi-request-logger"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "simplejson"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "pyinstaller"], check=True, universal_newlines=True)
+
+if not stracker_only and not linux_only and not stracker_packager_only:
 
     shutil.rmtree("dist", True)
     assert not os.path.exists("dist")
@@ -123,10 +138,10 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
 
     patch_ptracker_server(ptracker_py_files)
 
-    os.environ['PYTHONPATH'] = r"..\system;..\..\system"
     print("------------------- Building ptracker.exe -------------------------------")
-    assert 0 == os.system("pyinstaller --name ptracker --clean -y --onefile --windowed --paths D:\SteamLibrary\steamapps\common\assettocorsa\apps\python\system --additional-hooks-dir=stracker/pyinstaller-hooks --path stracker --path stracker/externals ptracker-server-dist.py")
-    #assert 0 == os.system("python setup-ptracker-server.py py2exe")
+    subprocess.run(["env\windows\Scripts\pyinstaller.exe", "--name", "ptracker", "--clean", "-y", "--onefile", "--windowed",
+                    "--paths", f"{ac_install_dir}\\apps\python\system", "--additional-hooks-dir=stracker/pyinstaller-hooks",
+                    "--path", "stracker", "--path", "stracker/externals", "ptracker-server-dist.py"], check=True, universal_newlines=True)
 
     def checksum(buffer):
         sign = buffer[:0x12] + buffer[(0x12+4):]
@@ -178,9 +193,9 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
                 'FileStatements':"\n".join([r'File "/oname=$INSTDIR\%s" %s'%(outfn, infn) for outfn,infn in self.files.items()]),
             }
             open(self.script, "w").write(s % subst)
-            assert 0 == os.system('"C:/Program Files (x86)/NSIS/makensis.exe" %s' % self.script)
+            subprocess.run([r"C:\Program Files (x86)\NSIS\makensis.exe", self.script], check=True, universal_newlines=True)
 
-    r = nsis_builder("versions/ptracker-V%s.exe" % version, "ptracker.nsh") #zipfile.ZipFile("ptracker-V%s.zip" % version, "w")
+    r = nsis_builder("versions/ptracker-V%s.exe" % version, "ptracker.nsh") 
 
     r.writestr(os.path.join("apps","python","ptracker","ptracker_lib","executable.py"),
                'ptracker_executable = ["apps/python/ptracker/dist/ptracker.exe"]\n'.encode(encoding="ascii"))
@@ -247,18 +262,19 @@ if not ptracker_only:
 
     if not linux_only and not stracker_packager_only:
         print("------------------- Building stracker.exe -------------------------------")
-        assert 0 == os.system("pyinstaller --name stracker --clean -y --onefile --exclude-module http_templates --hidden-import cherrypy.wsgiserver.wsgiserver3 --hidden-import psycopg2 --additional-hooks-dir=pyinstaller-hooks\ --path .. --path externals stracker.py")
-        #assert 0 == os.system("python setup-stracker.py py2exe")
+        subprocess.run(["../env/windows/Scripts/pyinstaller.exe", "--name", "stracker", "--clean", "-y", "--onefile", "--exclude-module", "http_templates", "--hidden-import", "cherrypy.wsgiserver.wsgiserver3",
+                        "--hidden-import", "psycopg2", "--additional-hooks-dir=pyinstaller-hooks", "--path", "..", "--path", "externals", "stracker.py"],
+                        check=True, universal_newlines=True)
         if os.path.exists('stracker-default.ini'):
             os.remove('stracker-default.ini')
-        os.system(r"dist\stracker.exe --stracker_ini stracker-default.ini 2>null")
+        subprocess.run([r"dist\stracker.exe", "--stracker_ini", "stracker-default.ini"], universal_newlines=True)
+        assert(os.path.isfile('stracker-default.ini'))
         r.write("dist/stracker.exe", "stracker.exe")
         r.write("stracker-default.ini", "stracker-default.ini")
 
     if not linux_only and not stracker_only:
         print("------------------- Building stracker-packager.exe ----------------------")
-        assert 0 == os.system("pyinstaller --clean -y --onefile --path .. --path externals stracker-packager.py")
-        #assert 0 == os.system("python -m py2exe.build_exe stracker-packager.py -OO -c --bundle-files 0 -i ctypes -x django")
+        subprocess.run(["../env/windows/Scripts/pyinstaller.exe", "--clean", "-y", "--onefile", "--path", "..", "--path", "externals", "stracker-packager.py"], check=True, universal_newlines=True)
         r.write("dist/stracker-packager.exe", "stracker-packager.exe")
     os.chdir("..")
 
@@ -278,8 +294,8 @@ if not ptracker_only:
 
     if not windows_only:
         print(REMOTE_BUILD_CMD)
-        rbuild_out = subprocess.check_output(REMOTE_BUILD_CMD, universal_newlines=True)
+        rbuild_out = subprocess.run(REMOTE_BUILD_CMD, check=True, universal_newlines=True)
         if not REMOTE_COPY_RESULT is None:
-            rcopy_out = subprocess.check_output(REMOTE_COPY_RESULT, universal_newlines=True)
+            rcopy_out = subprocess.run(REMOTE_COPY_RESULT, check=True, universal_newlines=True)
 
         r.write("stracker/stracker_linux_x86.tgz", "stracker_linux_x86.tgz")

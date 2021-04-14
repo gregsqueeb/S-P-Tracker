@@ -30,7 +30,7 @@ import shutil
 import simplejson as json
 import math
 import zipfile
-import cgi
+import html
 import re
 from collections import OrderedDict,deque
 
@@ -324,14 +324,14 @@ class StrackerPublic(http_server_base.StrackerPublicBase):
                 }
                 track = td[sessionInfo.track].get('uiname', sessionInfo.track)
                 if track is None: track = sessionInfo.track
-                track = cgi.escape(track)
-                session_type = cgi.escape(types[sessionInfo.session_type])
+                track = html.escape(track)
+                session_type = html.escape(types[sessionInfo.session_type])
                 if sessionInfo.session_laps > 0:
-                    duration = cgi.escape('%d / %d laps'%(maxLaps, sessionInfo.session_laps))
+                    duration = html.escape('%d / %d laps'%(maxLaps, sessionInfo.session_laps))
                 else:
                     timeLeft = sessionInfo.session_duration*60*1000 - sessionInfo.elapsedMS
                     timeLeft = format_time_s(int(timeLeft))
-                    duration = cgi.escape(timeLeft)
+                    duration = html.escape(timeLeft)
                 res_s = '<td>%(track)s</td><td>%(session_type)s</td><td>%(duration)s</td>\n' % locals()
 
 
@@ -676,7 +676,7 @@ class StrackerAdmin(StrackerPublic):
     def log_stream(self, limit=10, server=None, level="unclassified", curr_url=None):
 
         def colorize(line):
-            res = ('', cgi.escape(line), 4)
+            res = ('', html.escape(line), 4)
             cd = {"[ERROR"  : ("danger",0),
                   "[WARN"   : ("warning",1),
                   "[INFO"   : ("info",2),
@@ -690,8 +690,8 @@ class StrackerAdmin(StrackerPublic):
                     if p2 > p1:
                         lbl = cd[l][0]
                         level = cd[l][1]
-                        res = ('<span class="label label-' + lbl + '">' + cgi.escape(line[:p2].strip()) + '</span>',
-                               cgi.escape(line[p2+1:].strip()),
+                        res = ('<span class="label label-' + lbl + '">' + html.escape(line[:p2].strip()) + '</span>',
+                               html.escape(line[p2+1:].strip()),
                                level)
             return res
 
@@ -761,11 +761,11 @@ class StrackerAdmin(StrackerPublic):
         except GeneratorExit:
             acdebug("generator exit")
         except KeyError:
-            yield cgi.escape("<Server down?>")
+            yield html.escape("<Server down?>")
         except stracker_shm.ServerError:
-            yield cgi.escape("<Server down?>")
+            yield html.escape("<Server down?>")
         except:
-            yield cgi.escape("<Interrupted>")
+            yield html.escape("<Interrupted>")
             acerror("Exception in log_stream:")
             acerror(traceback.format_exc())
             self.streamingClientsCount -= 1

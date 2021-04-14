@@ -70,7 +70,7 @@ class CursorWrapper:
         if not self.db.inTransaction:
             acwarning("Execute but not in transaction?")
             acwarning("\n".join(traceback.format_stack()))
-        tStart = time.time()
+        tStart = time.process_time()
         while 1:
             try:
                 #t = stmt
@@ -83,7 +83,7 @@ class CursorWrapper:
                 #stmt_log.flush()
                 return self.cur.execute(stmt, kw)
             except apsw.LockedError as e:
-                if time.time() - tStart > 1.:
+                if time.process_time() - tStart > 1.:
                     acwarning("Waiting too long for database to get unlocked")
                     raise e
                 time.sleep(0.2)
