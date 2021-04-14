@@ -1,3 +1,5 @@
+Unicode True
+
 !include x64.nsh
 
 !define StrRep "!insertmacro StrRep"
@@ -5,16 +7,12 @@
     Push `${string}`
     Push `${old}`
     Push `${new}`
-    !ifdef __UNINSTALL__
-        Call un.StrRep
-    !else
-        Call StrRep
-    !endif
+    Call StrRep
     Pop ${output}
 !macroend
  
 !macro Func_StrRep un
-    Function ${un}StrRep
+    Function StrRep
         Exch $R2 ;new
         Exch 1
         Exch $R1 ;old
@@ -65,7 +63,6 @@
     FunctionEnd
 !macroend
 !insertmacro Func_StrRep ""
-!insertmacro Func_StrRep "un."
 
 Name "ptracker"
 OutFile "%(target)s"
@@ -158,7 +155,7 @@ vc2015nok:
     MessageBox MB_YESNO "It seems you do not have the Microsoft Redistributables 2015 installed on your system. These are needed for setup sharing. Download and install them now?" IDYES inst2015 IDNO vc2015ok
 inst2015:
     DetailPrint "Downloading VC Redist 2015"
-    NSISdl::download http://n-e-y-s.de/downloads/vcredist_2015/vc_redist.x64.exe vc_redist.x64.exe
+    NSISdl::download https://aka.ms/vs/16/release/vc_redist.x64.exe vc_redist.x64.exe
     IfErrors download_failed download_good
 download_failed:
     MessageBox MB_OK "The download failed. You will not be able to share setups with ptracker. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
@@ -184,13 +181,13 @@ vc2015nok32:
     MessageBox MB_YESNO "It seems you do not have the Microsoft Redistributables 2015 installed on your system. These are needed for setup sharing. Download and install them now?" IDYES inst201532 IDNO vc2015ok32
 inst201532:
     DetailPrint "Downloading VC Redist 2015"
-    NSISdl::download http://n-e-y-s.de/downloads/vcredist_2015/vc_redist.x32.exe vc_redist.x32.exe
+    NSISdl::download https://aka.ms/vs/16/release/vc_redist.x86.exe vc_redist.x86.exe
     IfErrors download_failed32 download_good32
 download_failed32:
     MessageBox MB_OK "The download failed. You will not be able to share setups with ptracker. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
     goto theend
 download_good32:
-    ExecWait '"vc_redist.x32.exe"'
+    ExecWait '"vc_redist.x86.exe"'
     IfErrors exec_failed32 exec_good32
 exec_failed32:
     MessageBox MB_OK "Cannot execute the downloaded installer for VS 2015 redistributables. Go to http://n-e-y-s.de/ptracker_doc and check how to manually install the VS 2015 Redistributables."
