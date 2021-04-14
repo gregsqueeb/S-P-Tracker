@@ -62,7 +62,7 @@ class Profiler:
         self.histo.reset()
 
     def logProfileInfo(self):
-        period = time.clock() - self.resetTime
+        period = time.time() - self.resetTime
         if self.histo.count >= 1:
             res = ("%s: calls per second: %5.1f execution times [ms]: min=%6.2f, max=%6.2f, avg=%6.2f, median=%5.1f, Q(95%%)=%5.1f, Q(99%%)=%5.1f, Q(99.9%%)=%5.1f, Q(99.99%%)=%5.1f Q(99.999%%)=%5.1f (# >= %.0f ms: %7d/%7d)" % (
                     self.name,

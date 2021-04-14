@@ -70,7 +70,7 @@ class ACUdpMonitor:
                 if self.intervals[pluginId] == 0:
                     # no rt report configured, CarUpdate event will not be passed
                     return False
-                t = time.time()
+                t = time.perf_counter()
                 threshold = t - max(0, (self.intervals[pluginId]-50)*0.001)
                 if not packet.carId in self.cu_history[pluginId]:
                     # create a history info object for the car if not already there
