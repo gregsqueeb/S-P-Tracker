@@ -142,9 +142,11 @@ def main():
             r.write(badge, os.path.join("cars", c, "badge.png"))
             cok += 1
             print(c, " ... successfully added")
-        except:
+        except Exception as e:
             cnok += 1
             print(c, " ... error")
+            print(e)
+    first_exception = None
     track_dir = os.path.join(ac_dir, "content", "tracks")
     for t in os.listdir(track_dir):
         cntw = 0
@@ -157,8 +159,8 @@ def main():
                 r.write(sections, os.path.join("tracks", t, "sections.ini"))
             cntw += 1
             print(t, " ... successfully added")
-        except e:
-            print(e) 
+        except Exception as e:
+            first_exception = e
             pass
         # this might (also) be a config track
         config_dir = os.path.join(track_dir, t)
@@ -174,7 +176,8 @@ def main():
                             r.write(sections, os.path.join("tracks", t+"-"+c, "sections.ini"))
                         cntw += 1
                         print(t+"-"+c, " ... successfully added")
-                    except:
+                    except Exception as e:
+                        print(t+"-"+c, " ... error")
                         print(e)
                         pass
         except:
@@ -184,6 +187,7 @@ def main():
         else:
             cnok += 1
             print("Could not convert track %s" % t)
+            print(first_exception)
     return (cok, cnok)
 
 if __name__ == "__main__":

@@ -25,6 +25,14 @@ import sys
 exec(open("release_settings.py").read())
 
 test_release_process = False
+
+# Only stracker comes in Linux and Windows flavors, so don't put
+# OS on the others for now.
+build_ptracker = True
+build_stracker_windows = True
+build_stracker_linux = True
+build_stracker_packager = True
+
 if "--test_release_process" in sys.argv:
     sys.argv.remove("--test_release_process")
     print("Test mode, no release will be done")
@@ -60,6 +68,30 @@ if "--windows_only" in sys.argv:
     windows_only = True
     test_release_process = True
 
+if ptracker_only or stracker_only or stracker_packager_only:
+    if ptracker_only:
+        build_ptracker = True
+    if stracker_only:
+        build_stracker_linux = True
+        build_stracker_windows = True
+    if stracker_packager_only:
+        build_stracker_packager = True
+else:
+    build_ptracker = True
+    build_stracker_windows = True
+    build_stracker_linux = True
+    build_stracker_packager = True
+
+if windows_only and linux_only:
+    print("Error: --windows_only and --linux_only are mutually exclusive")
+    sys.exit(1)
+if windows_only:
+    build_stracker_linux = False
+if linux_only:
+    build_ptracker = False
+    build_stracker_windows = False
+    build_stracker_packager = False
+
 if len(sys.argv) != 2:
     print ("Usage: create_release [--test_release_process] [--ptracker_only] [--stracker_only] [--linux_only] [--windows_only] [--stracker_packager_only] <version_number>")
     sys.exit(1)
@@ -79,22 +111,23 @@ subprocess.run(["virtualenv", "env/windows"], check=True, universal_newlines=Tru
 # Use virtualenv
 exec(open("env/windows/Scripts/activate_this.py").read())
 
-# Install/upgrade packages
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "bottle"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "cherrypy"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "psycopg2"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "python-dateutil"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "wsgi-request-logger"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "simplejson"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "pyinstaller"], check=True, universal_newlines=True)
-subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "PySide2"], check=True, universal_newlines=True)
-# Since this downloads the entire file and is version locked, don't do it if already installed
-if (not os.path.isdir(r"env\windows\Lib\site-packages\apsw-3.35.4.post1-py3.9.egg-info"):
-    subprocess.run(["env\windows\Scripts\pip.exe", "install", "https://github.com/rogerbinns/apsw/releases/download/3.35.4-r1/apsw-3.35.4-r1.zip",
-                    "--global-option=fetch", "--global-option=--version", "--global-option=3.35.4", "--global-option=--all",
-                    "--global-option=build", "--global-option=--enable-all-extensions"], check=True,universal_newlines=True)
+if not linux_only:
+    # Install/upgrade packages
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "bottle"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "cherrypy"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "psycopg2"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "python-dateutil"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "wsgi-request-logger"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "simplejson"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "pyinstaller"], check=True, universal_newlines=True)
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "PySide2"], check=True, universal_newlines=True)
+    # Since this downloads the entire file and is version locked, don't do it if already installed
+    if (not os.path.isdir(r"env\windows\Lib\site-packages\apsw-3.35.4.post1-py3.9.egg-info")):
+        subprocess.run(["env\windows\Scripts\pip.exe", "install", "https://github.com/rogerbinns/apsw/releases/download/3.35.4-r1/apsw-3.35.4-r1.zip",
+                        "--global-option=fetch", "--global-option=--version", "--global-option=3.35.4", "--global-option=--all",
+                        "--global-option=build", "--global-option=--enable-all-extensions"], check=True,universal_newlines=True)
 
-if not stracker_only and not linux_only and not stracker_packager_only:
+if build_ptracker:
 
     shutil.rmtree("dist", True)
     assert not os.path.exists("dist")
@@ -264,7 +297,7 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
 #if os.path.exists("build"):
 #    shutil.rmtree("build")
 
-if not ptracker_only:
+if build_stracker_windows or build_stracker_linux or build_stracker_packager:
 
     os.chdir("stracker")
     if os.path.exists('dist'):
@@ -272,7 +305,7 @@ if not ptracker_only:
 
     r = zipfile.ZipFile("../versions/stracker-V%s.zip" % version, "w")
 
-    if not linux_only and not stracker_packager_only:
+    if build_stracker_windows:
         print("------------------- Building stracker.exe -------------------------------")
         subprocess.run(["../env/windows/Scripts/pyinstaller.exe", "--name", "stracker", "--clean", "-y", "--onefile", "--exclude-module", "http_templates", "--hidden-import", "cherrypy.wsgiserver.wsgiserver3",
                         "--hidden-import", "psycopg2", "--additional-hooks-dir=pyinstaller-hooks", "--path", "..", "--path", "externals", "stracker.py"],
@@ -284,10 +317,11 @@ if not ptracker_only:
         r.write("dist/stracker.exe", "stracker.exe")
         r.write("stracker-default.ini", "stracker-default.ini")
 
-    if not linux_only and not stracker_only:
+    if build_stracker_packager:
         print("------------------- Building stracker-packager.exe ----------------------")
         subprocess.run(["../env/windows/Scripts/pyinstaller.exe", "--clean", "-y", "--onefile", "--path", "..", "--path", "externals", "stracker-packager.py"], check=True, universal_newlines=True)
         r.write("dist/stracker-packager.exe", "stracker-packager.exe")
+
     os.chdir("..")
 
     r.write("stracker/README.txt", "README.txt")
@@ -304,7 +338,7 @@ if not ptracker_only:
         print("adding",src,"as",tgt)
         r.write(src, tgt)
 
-    if not windows_only:
+    if build_stracker_linux:
         print(REMOTE_BUILD_CMD)
         rbuild_out = subprocess.run(REMOTE_BUILD_CMD, check=True, universal_newlines=True)
         if not REMOTE_COPY_RESULT is None:
