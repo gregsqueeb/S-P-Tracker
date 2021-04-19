@@ -1,6 +1,7 @@
 Unicode True
 
 !include x64.nsh
+!include keyvalue.nsh
 
 !define StrRep "!insertmacro StrRep"
 !macro StrRep output string old new
@@ -71,32 +72,103 @@ DirText "Choose the installation directory of Assetto Corsa!"
 ShowInstDetails show
 
 InstallDir "C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa"
-    
+
+Var steamPath # Possible Steam install path
+Var steamApps # steamapps directory
+Var steamLibrariesVDF # path of libraryfolders.vdf
+Var steamLibraryNum # libraryfolders.vdf has a bunch of numeric keys, starting at 1
+Var steamLibraryPath # Additional Steam Library directory
+Var acPath # Possible Assetto Corsa directory
+Var acManifest # Steam's manifest file for AC in steamapps
+
+Function TryACPath
+    # This can be called directly after reading registry
+    # so do the slash conversion here too
+    ${StrRep} $steamPath $steamPath "/" "\"
+    # using a global label here doesn't work because the
+    # calling function is still returned to afterwards
+    IfFileExists "$acPath\AssettoCorsa.exe" end
+    SetErrors
+    end:
+FunctionEnd
+
+Function TrySteamApps
+
+    # First try proper, through manifest
+    StrCpy $acManifest "$steamApps\appmanifest_244210.acf"
+    IfFileExists $acManifest 0 manifest_error
+    ${ReadVDFStr} $acPath $acManifest "AppState>installdir"
+    IfErrors manifest_error
+    StrCpy $acPath "$steamApps\common\$acPath"
+    Call TryACPath
+    IfErrors manifest_error end
+    manifest_error:
+        # Manifest not found or corrupt, try the standard
+        StrCpy $acPath "$steamApps\common\assettocorsa"
+        Call TryACPath
+        # no need to check error here, our caller will
+    end:
+FunctionEnd
+
+Function TrySteamPath
+    # Some registry keys have forward slashes for path
+    ${StrRep} $steamPath $steamPath "/" "\"
+
+    # first check whether the default library has AC
+    StrCpy $steamApps "$steamPath\steamapps"
+    Call TrySteamApps
+    IfErrors 0 end
+    # default library doesn't have it, try the other libraries
+    StrCpy $steamLibrariesVDF "$steamPath\steamapps\libraryfolders.vdf"
+    IfFileExists $steamLibrariesVDF 0 error
+    StrCpy $steamLibraryNum 1
+    loop:
+        ${ReadVDFStr} $steamLibraryPath $steamLibrariesVDF "LibraryFolders>$steamLibraryNum"
+        IfErrors error
+        StrCpy $steamApps "$steamLibraryPath\steamapps"
+        Call TrySteamApps
+        IfErrors 0 end
+        IntOp $steamLibraryNum $steamLibraryNum + 1
+        Goto loop
+    error:
+        SetErrors
+    end:
+FunctionEnd
+
+
 Function .onInit
-    ; try to autodetect the location of the Assetto Corsa game path
-    ReadRegStr $0 HKCU Software\Valve\Steam SteamPath
-    StrCpy $1 "$0\SteamApps\common\assettocorsa"
-    IfFileExists $1\AssettoCorsa.exe instfound
+    # try to autodetect the location of the Assetto Corsa game path
 
-    ReadRegStr $0 HKLM "SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
-    StrCpy $1 "$0"
-    IfFileExists $1\AssettoCorsa.exe instfound
+    # first, try the 3 Steam path registry keys
+    ReadRegStr $steamPath HKCU SOFTWARE\Valve\Steam steampath
+    MessageBox MB_OK "Steampath: $steamPath"
+    Call TrySteamPath
+    IfErrors 0 acPathFound
+    ReadRegStr $steamPath HKLM SOFTWARE\WOW6432Node\Valve\Steam InstallPath
+    Call TrySteamPath
+    IfErrors 0 acPathFound
+    ReadRegStr $steamPath HKLM SOFTWARE\Valve\Steam InstallPath
+    Call TrySteamPath
+    IfErrors 0 acPathFound
 
-    ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
-    StrCpy $1 "$0"
-    IfFileExists $1\AssettoCorsa.exe instfound
+    # second, try uninstall registry keys
+    ReadRegStr $acPath HKLM "SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
+    Call TryACPath
+    IfErrors 0 acPathFound
+    ReadRegStr $acPath HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 244210" InstallLocation
+    Call TryACPath
+    IfErrors 0 acPathFound
 
-    StrCpy $1 "C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa"
+    # if none of those worked, try the plausible default
+    StrCpy $acPath "C:\Program Files (x86)\Steam\SteamApps\common\assettocorsa"
 
-instfound:
-    ${StrRep} $2 $1 "/" "\"
-    StrCpy $INSTDIR $2
+    acPathFound:
+        StrCpy $INSTDIR $acPath
 FunctionEnd
 
 Function .onVerifyInstDir
     ; check for sane installation directory
     IfFileExists $INSTDIR\AssettoCorsa.exe PathGood
-        MessageBox MB_OK "Must be installed in Assetto Corsa game directory."
         Abort "Must be installed in Assetto Corsa game directory."
     PathGood:
 FunctionEnd
