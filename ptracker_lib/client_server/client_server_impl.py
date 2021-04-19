@@ -140,7 +140,8 @@ class PickleWriter:
 
     def create(self):
         self._b = io.BytesIO()
-        self._p = pickle.Pickler(self._b)
+        # Talking between Python 3.3 and 3.9, use pickle v3
+        self._p = pickle.Pickler(self._b, protocol=3)
         self._batch = PickleBatch()
 
     def write(self, args):
@@ -273,8 +274,8 @@ class SharedMemoryIF(BaseIF):
             self.state = self.STATE_WAITING_FOR_REQUESTS
         elif mode == self.MODE_CLIENT:
             self.state = self.STATE_PROCESSING_REQUESTS
-        if debug_protocol >= 1: PRINT("[%s] construct answers=%s shadow=%s"%
-               (self.strMode[self.mode], type(self.answers), type(self.shadowAnswers))
+        if debug_protocol >= 1: PRINT("[%s] construct answers=%s"%
+               (self.strMode[self.mode], type(self.answers))
         )
 
     @debug
@@ -301,8 +302,8 @@ class SharedMemoryIF(BaseIF):
         self.maxAnswerSize = max(self.maxAnswerSize, s)
         self.resetRequestQueue()
         protocol_assert(self.shmRequestHdr.numItems == -1)
-        if debug_protocol >= 1: PRINT("[%s] commit oldNAnswers=%s newNAnswers=%s answers=%s shadow=%s"%
-               (self.strMode[self.mode], self.shmAnswerHdr.numItems, self.nAnswers, type(self.answers), type(self.shadowAnswers))
+        if debug_protocol >= 1: PRINT("[%s] commit oldNAnswers=%s newNAnswers=%s answers=%s"%
+               (self.strMode[self.mode], self.shmAnswerHdr.numItems, self.nAnswers, type(self.answers))
         )
         self.shmAnswerHdr.numItems = self.nAnswers
         #self.shmAnswerHdr.locked = 0

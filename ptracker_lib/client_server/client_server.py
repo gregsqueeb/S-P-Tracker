@@ -207,7 +207,10 @@ class ClientServer:
             f_desc = self._local_functions_by_name[name]
             a = (f_desc.id,name,f_desc.args,f_desc.ret)
             IF.write_int(REQ_ADD_FUNCTION)
-            IF.write_bytes(pickle.dumps(a))
+            # This is used by the ptracker server which is running a newer
+            # Python. The client runs inside AC and thus is 3.3 and can only
+            # do v3 of Pickle
+            IF.write_bytes(pickle.dumps(a, protocol=3))
             IF.inc()
 
     def _processRequest(self):

@@ -654,7 +654,10 @@ class ProtocolHandler:
                 if not ld['historyinfo'] is None:
                     ld['historyinfo_available'] = True
                     ld['historyinfo'] = None
-            pickleStr = pickle.dumps(ld)
+            # This might be used by the ptracker server which is running
+            # a newer Python. The client runs inside AC and thus is 3.3
+            # and can only do v3 of Pickle
+            pickleStr = pickle.dumps(ld, protocol=3)
             packed += self._pack_bytes(pickleStr)
         elif req == self.REQ_SERVER_DATA_CHANGED:
             if self.prot_version < 3:

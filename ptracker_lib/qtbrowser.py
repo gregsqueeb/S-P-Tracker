@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
-from PySide import QtCore,  QtGui, QtWebKit, QtNetwork
+from PySide2 import QtCore,  QtGui, QtWebEngineWidgets, QtNetwork
 from ptracker_lib.helpers import *
 from ptracker_lib.gui_helpers import Label
 from ptracker_lib.qtbrowser_common import qtthread
@@ -299,7 +299,7 @@ class WebBrowser(Label):
             ptsInfo.ptracker_wrapper = PtrackerSlots(http_server_module.ptracker)
             ptsInfo.ptracker = http_server_module.ptracker
             acinfo("Created http server. Elements: %s", str(dir(http_server)))
-            QtWebKit.QWebSecurityOrigin.addLocalScheme('pts:')
+            QtWebEngineWidgets.QWebEngineSecurityOrigin.addLocalScheme('pts:')
             ptsInfo.PtsNetworkAccessManager = PtsNetworkAccessManager
             self.ptsInfo = ptsInfo
             self.qobject.pageChanged.emit(protocol+"://local/lapstat", self.ptsInfo)

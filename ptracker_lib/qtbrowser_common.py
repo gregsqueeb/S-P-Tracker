@@ -14,7 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 
-from PySide import QtCore,  QtGui, QtWebKit, QtNetwork
+from PySide2 import QtCore, QtGui, QtWebEngineWidgets, QtNetwork, QtWidgets
 import functools
 import time
 from ptracker_lib.helpers import *
@@ -23,12 +23,12 @@ _qtthread = None
 def qtthread():
     return _qtthread
 
-class MyWebPage(QtWebKit.QWebPage):
+class MyWebPage(QtWebEngineWidgets.QWebEnginePage):
     @callbackDecorator
     def extension(self, extension, option, output):
         if option is None or output is None:
             return False
-        if extension == QtWebKit.QWebPage.ErrorPageExtension:
+        if extension == QtWebEngineWidgets.QWebEnginePage.ErrorPageExtension:
             acdebug("Error page called")
             errOption = option
             errPage = """\
@@ -54,7 +54,7 @@ class MyWebPage(QtWebKit.QWebPage):
     </body>
 </html>""" % {
         'url' : errOption.url.toString(),
-        'domain' : "network domain" if errOption.domain == QtWebKit.QWebPage.QtNetwork else "http domain" if errOption.domain == QtWebKit.QWebPage.Http else "webkit domain" if errOption.domain == QtWebKit.QWebPage.WebKit else "unknown domain",
+        'domain' : "network domain" if errOption.domain == QtWebEngineWidgets.QWebEnginePage.QtNetwork else "http domain" if errOption.domain == QtWebEngineWidgets.QWebEnginePage.Http else "webkit domain" if errOption.domain == QtWebEngineWidgets.QWebEnginePage.WebKit else "unknown domain",
         'error' : errOption.error,
         'errtext' : errOption.errorString.replace("\n", "\n<br>"),
         }
@@ -70,9 +70,9 @@ class MyWebPage(QtWebKit.QWebPage):
     @callbackDecorator
     def supportsExtension(self, extension):
         acdebug("supportsExtension called.")
-        if extension == QtWebKit.QWebPage.ErrorPageExtension:
+        if extension == QtWebEngineWidgets.QWebEnginePage.ErrorPageExtension:
             return True
-        return QtWebKit.QWebPage.supportsExtension(extension)
+        return QtWebEngineWidgets.QWebEnginePage.supportsExtension(extension)
 
     @callbackDecorator
     def javaScriptConsoleMessage (self, message, lineNumber, sourceID):
@@ -106,11 +106,11 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
                     acerror("Qt Message Handler: %s", msg_string)
             except:
                 acdebug("%s %s %s", msg_type, msg_string, a)
-        QtCore.qInstallMsgHandler(handler)
+        QtCore.qInstallMessageHandler(handler)
 
-        self.newSize = QtCore.Slot(int,int)(self._newSize)
-        self.clickEvent = QtCore.Slot(int,int)(self._clickEvent)
-        self.newPage = QtCore.Slot(str, object)(self._newPage)
+        self.newSize = self._newSize
+        self.clickEvent = self._clickEvent
+        self.newPage = self._newPage
         self.page = None
         self.run()
 
@@ -140,7 +140,7 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
         self.page.setViewportSize(self.size)
         img = QtGui.QImage(self.size, QtGui.QImage.Format_ARGB32_Premultiplied)
         img.fill(QtCore.Qt.transparent)
-        palette = QtGui.QApplication.palette()
+        palette = QtWidgets.QApplication.palette()
         palette.setBrush(QtGui.QPalette.Base, QtCore.Qt.transparent)
         self.page.setPalette(palette)
         painter = QtGui.QPainter(img)
@@ -178,6 +178,7 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
         self.img = img
 
     @callbackDecorator
+    @QtCore.Slot(int, int)
     def _newSize(self, w, h, zoom):
         lock = QtCore.QMutexLocker(self.imgMutex)
         w = round(w*zoom)
@@ -188,6 +189,7 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
         self.render()
 
     @callbackDecorator
+    @QtCore.Slot(int, int)
     def _clickEvent(self, x,y):
         if not self.active():
             return
@@ -249,6 +251,7 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
 
 
     @callbackDecorator
+    @QtCore.Slot(str, object)
     def _newPage(self, url, ptsInfo):
         acdebug("qtbrowser: newPage %s", url)
         lock = QtCore.QMutexLocker(self.imgMutex)
@@ -302,7 +305,7 @@ class QtThread(QtCore.QObject): #(QtCore.QThread):
         page.mainFrame().addToJavaScriptWindowObject('ptracker', self.ptracker)
 
     def run(self):
-        self.app = QtGui.QApplication([])
+        self.app = QtWidgets.QApplication([])
 
         acdebug("qtbrowser: run")
         self.app.exec_()

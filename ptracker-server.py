@@ -22,7 +22,7 @@ import ptracker_lib.expand_ac
 if "/check_install" == sys.argv[1]:
     try:
         import ptracker_lib
-        import PySide.QtGui
+        import PySide2.QtGui
         open(ptracker_lib.expand_ac.expand_ac("Assetto Corsa","logs","log.txt"), "r")
         print("Installation seems to be ok")
         os._exit(7)
@@ -51,7 +51,7 @@ import acsys
 from ptracker_lib.client_server.client_server import *
 import ptracker_lib.client_server.client_server_impl
 
-from PySide import QtGui
+from PySide2 import QtGui, QtWidgets
 
 #ptracker_lib.client_server.client_server_impl.debug_protocol = 1
 
@@ -229,7 +229,7 @@ def work(pid):
         acsim.ac.log = lambda *args: print(" ".join(map(str, args)))
         ptracker.acShutdown()
         sys.stdout.flush()
-        QtGui.QApplication.exit(0)
+        QtWidgets.QApplication.exit(0)
         sys.exit(0)
     except:
         print("Fatal error in ptracker-server:")
@@ -304,9 +304,6 @@ def check():
 
 if __name__ == "__main__":
     try:
-        if not check():
-            print("Please do not change any of the ptracker source files.")
-            os._exit(1)
         pid = int(sys.argv[1])
         s = Server(IF_SHM, "ptracker-client-server-comm", pid, 15.)
         acsim = DummyAcsim(s)

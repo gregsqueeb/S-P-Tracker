@@ -149,15 +149,14 @@ def main():
     for t in os.listdir(track_dir):
         cntw = 0
         try:
-            jsf, mpng, mini, sections = track_files(t, ac_dir)
+            jsf, mpng, mini = track_files(t, ac_dir)
             r.write(jsf, os.path.join("tracks", t, "ui_track.json"))
             r.write(mpng, os.path.join("tracks", t, "map.png"))
             r.write(mini, os.path.join("tracks", t, "map.ini"))
-            if sections is not None:
-                r.write(sections, os.path.join("tracks", t, "sections.ini"))
             cntw += 1
             print(t, " ... successfully added")
-        except:
+        except e:
+            print(e) 
             pass
         # this might (also) be a config track
         config_dir = os.path.join(track_dir, t)
@@ -165,15 +164,14 @@ def main():
             for c in os.listdir(os.path.join(config_dir, "ui")):
                 if os.path.isdir(os.path.join(config_dir, "ui", c)):
                     try:
-                        jsf, mpng, mini, sections = track_files(t + "-" + c, ac_dir)
+                        jsf, mpng, mini = track_files(t + "-" + c, ac_dir)
                         r.write(jsf, os.path.join("tracks", t+"-"+c, "ui_track.json"))
                         r.write(mpng, os.path.join("tracks", t+"-"+c, "map.png"))
                         r.write(mini, os.path.join("tracks", t+"-"+c, "map.ini"))
-                        if sections is not None:
-                            r.write(sections, os.path.join("tracks", t+"-"+c, "sections.ini"))
                         cntw += 1
                         print(t+"-"+c, " ... successfully added")
-                    except:
+                    except e:
+                        print(e) 
                         pass
         except:
             pass

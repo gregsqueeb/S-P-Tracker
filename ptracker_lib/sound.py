@@ -57,7 +57,7 @@ def playsound(filename, volume):
         if type(cached) == type(()):
             t = cached[0]
             t.join(timeout=0.0)
-            if not t.isAlive():
+            if not t.is_alive():
                 sound_cache[(filename,volume)] = cached[1]
                 cached = cached[1]
             else:

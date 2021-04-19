@@ -87,6 +87,12 @@ subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "python-d
 subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "wsgi-request-logger"], check=True, universal_newlines=True)
 subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "simplejson"], check=True, universal_newlines=True)
 subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "pyinstaller"], check=True, universal_newlines=True)
+subprocess.run(["env\windows\Scripts\pip.exe", "install", "--upgrade", "PySide2"], check=True, universal_newlines=True)
+# Since this downloads the entire file and is version locked, don't do it if already installed
+if (not os.path.isdir(r"env\windows\Lib\site-packages\apsw-3.35.4.post1-py3.9.egg-info"):
+    subprocess.run(["env\windows\Scripts\pip.exe", "install", "https://github.com/rogerbinns/apsw/releases/download/3.35.4-r1/apsw-3.35.4-r1.zip",
+                    "--global-option=fetch", "--global-option=--version", "--global-option=3.35.4", "--global-option=--all",
+                    "--global-option=build", "--global-option=--enable-all-extensions"], check=True,universal_newlines=True)
 
 if not stracker_only and not linux_only and not stracker_packager_only:
 
@@ -139,7 +145,13 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
     patch_ptracker_server(ptracker_py_files)
 
     print("------------------- Building ptracker.exe -------------------------------")
-    subprocess.run(["env\windows\Scripts\pyinstaller.exe", "--name", "ptracker", "--clean", "-y", "--onefile", "--windowed",
+    assert(os.path.isdir(f"{ac_install_dir}\\apps\python\system"))
+    # this is to help ptracker.exe load modules from the user's AC install dir
+    os.environ['PYTHONPATH'] = r"..\system;..\..\system"
+    subprocess.run(["env\windows\Scripts\pyinstaller.exe",
+                    # "--debug=bootloader",
+                    "--windowed",
+                    "--name", "ptracker", "--clean", "-y", "--onefile", 
                     "--paths", f"{ac_install_dir}\\apps\python\system", "--additional-hooks-dir=stracker/pyinstaller-hooks",
                     "--path", "stracker", "--path", "stracker/externals", "ptracker-server-dist.py"], check=True, universal_newlines=True)
 
@@ -247,10 +259,10 @@ ptracker_lib/stdlib64/CreateFileHook.dll""".split("\n")
     r.close()
 
 # remove build / dist path
-if os.path.exists("dist"):
-    shutil.rmtree("dist")
-if os.path.exists("build"):
-    shutil.rmtree("build")
+#if os.path.exists("dist"):
+#    shutil.rmtree("dist")
+#if os.path.exists("build"):
+#    shutil.rmtree("build")
 
 if not ptracker_only:
 
