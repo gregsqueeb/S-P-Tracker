@@ -1,11 +1,19 @@
+# used for local settings, copy from release_settings.py.in manually
+/release_settings.py
+
+# create_release.py output
 /versions
 stracker/stracker_linux_x86.tgz
 nsis_temp_files0
 ptracker-server-dist.py
 ptracker.nsh
-stracker-package.zip
-/release_settings.py
 stracker/stracker-default.ini
+
+# stracker-packager output
+stracker-package.zip
+
+# Ignore IDE files
+/.vscode/
 
 ## Standard Python .gitignore from Github
 # Byte-compiled / optimized / DLL files
