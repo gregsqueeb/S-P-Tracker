@@ -141,7 +141,6 @@ Function .onInit
 
     # first, try the 3 Steam path registry keys
     ReadRegStr $steamPath HKCU SOFTWARE\Valve\Steam steampath
-    MessageBox MB_OK "Steampath: $steamPath"
     Call TrySteamPath
     IfErrors 0 acPathFound
     ReadRegStr $steamPath HKLM SOFTWARE\WOW6432Node\Valve\Steam InstallPath
