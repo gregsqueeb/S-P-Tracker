@@ -279,7 +279,7 @@ class PersonalHotlaps:
         self.a2b = False
         self.a2bOffset = 0
         try:
-            jsf, mpng, mini = read_ui_data.track_files(trackname, ".")
+            jsf, mpng, mini, sections = read_ui_data.track_files(trackname, ".")
             trackui = read_ui_data.read_ui_file(jsf, open(jsf, "rb"), {})
             self.a2b = "A2B" in trackui['tracks'][trackname]["tags"]
             if trackname == "ks_nordschleife-touristenfahrten":

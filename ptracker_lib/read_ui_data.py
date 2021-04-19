@@ -45,8 +45,11 @@ def track_files(track, ac_dir):
         jsf = os.path.join(uidir, "ui_track.json")
         mpng = os.path.join(tdir, "map.png")
         mini = os.path.join(tdir, "data", "map.ini")
+        sections = os.path.join(tdir, "data", "sections.ini")
+        if not os.path.isfile(sections):
+            sections = None
         if os.path.isfile(jsf) and os.path.isfile(mpng) and os.path.isfile(mini):
-            return jsf, mpng, mini
+            return jsf, mpng, mini, sections
     acdebug("no info for track %s in dir %s", track, ac_dir)
     raise AssertionError
 
@@ -132,6 +135,31 @@ def read_ui_file(filename, file_ptr, odata):
                  xoffset=cp['PARAMETERS']['X_OFFSET'],
                  zoffset=cp['PARAMETERS']['Z_OFFSET'])
         }}})
+    if parts[-1].lower() == "sections.ini":
+        tracksidx = parts.index("tracks")
+        acname = parts[tracksidx + 1]
+        if len(parts) > tracksidx + 3:
+            acname += "-" + parts[tracksidx + 2]
+        cp = ConfigParser(strict=False, allow_no_value=True)
+        cp.read_file(io.TextIOWrapper(file_ptr))
+        sections = []
+        section_num = 0
+        while True:
+            # ConfigParser will throw an exception if the section/key doesn't exist
+            # so we just infinite loop until that happens
+            try:
+                section = 'SECTION_%d' % section_num
+                sections.append(dict(
+                    text=cp[section]['TEXT'],
+                    infloat=cp.getfloat(section, 'IN'),
+                    outfloat=cp.getfloat(section, 'OUT')
+                ))
+            except:
+                break
+            section_num += 1
+        if len(sections) > 0:
+            return _rec_update(odata, {'tracks': {acname : {'sections' : sections }}})
+
     return odata
 
 

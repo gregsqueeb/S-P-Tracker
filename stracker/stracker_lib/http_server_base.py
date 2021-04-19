@@ -147,10 +147,11 @@ class StrackerPublicBase:
                         data = {'tracks' : {ci['acname'] : {}}}
                         try:
                             for f in read_ui_data.track_files(ci['acname'], "."):
-                                try:
-                                    data = read_ui_data.read_ui_file(f, open(f, "rb"), data)
-                                except:
-                                    acdump("Exception in add ui track 0: %s", traceback.format_exc())
+                                if f is not None:
+                                    try:
+                                        data = read_ui_data.read_ui_file(f, open(f, "rb"), data)
+                                    except:
+                                        acdump("Exception in add ui track 0: %s", traceback.format_exc())
                             td = data['tracks'][ci['acname']]
                             uiname = td.get('uiname', None)
                             if ci['uiname'] not in [None, ci['acname']] and not uiname is None:
@@ -158,7 +159,12 @@ class StrackerPublicBase:
                                 acdebug("Setting uiname of %s to %s", ci['acname'], ci['uiname'])
                                 updated = True
                             if ci['mapdata'] is None and 'mini' in td and 'mpng' in td:
-                                ci['mapdata'] = pickle.dumps(dict(ini=td['mini'], png=td['mpng']))
+                                mapdata = dict(ini=td['mini'], png=td['mpng'])
+                                if 'sections' in td:
+                                    mapdata['sections'] = td['sections']
+                                else:
+                                    acwarning("no sections for %s", ci['acname'])
+                                ci['mapdata'] = pickle.dumps(mapdata)
                                 acdebug("Setting mapdata of %s", ci['acname'])
                                 updated = True
                         except:
@@ -518,6 +524,7 @@ class StrackerPublicBase:
         lapIds = OrderedDict( zip(lapIds, [None]*len(lapIds)) ).keys()
         ci = db.comparisonInfo(lapIds,__sync=True)()
         track = None
+        uitrack = None
         tracksame = 1
         car = None
         carsame = 1
@@ -525,23 +532,24 @@ class StrackerPublicBase:
             return ""
         for lapid in ci:
             if track is None:
-                track = ci[lapid]['uitrack']
-            if track != ci[lapid]['uitrack']:
+                uitrack = ci[lapid]['uitrack']
+                track = ci[lapid]['track']
+            if uitrack != ci[lapid]['uitrack']:
                 tracksame = 0
             if car is None:
                 car = ci[lapid]['uicar']
             if car != ci[lapid]['uicar']:
                 carsame = 0
         if tracksame and carsame:
-            title = "Lap Comparison %s @ %s" % (car,track)
+            title = "Lap Comparison %s @ %s" % (car,uitrack)
         elif tracksame:
-            title = "Lap Comparison on %s" % track
+            title = "Lap Comparison on %s" % uitrack
         else:
             title = "Lap Comparison (warning: different tracks!)"
         line_chart = XY(pygalConfig,
                         fill=False,
                         dots_size=1,
-                        interpolate='hermite',
+                        #interpolate='hermite',
                         interpolation_precision=1,
                         include_x_axis=True,
                         x_title='Track Position [m]',
@@ -549,8 +557,10 @@ class StrackerPublicBase:
                         title=title,
                         legend_at_bottom = True,
                         legend_font_size = 12,
-                        truncate_legend = 30)
+                        truncate_legend = 30,
+                        x_label_rotation = 45)
         maxN = 1
+        length = None
         #line_chart.title("Lap comparison"), ci[lapid]['uitrack']
         for lapid in lapIds:
             if not lapid in ci:
@@ -560,6 +570,8 @@ class StrackerPublicBase:
             l = ci[lapid]['length']
             if not l is None:
                 nsp = list(map(lambda x: min(l, max(0, x*l)), nsp))
+                if length is None:
+                    length = l
             if not labels is None:
                 lb = labels[lapid] + ":"
             else:
@@ -571,6 +583,21 @@ class StrackerPublicBase:
             legend = "%s%s by %s%s" % (lb, format_time(ci[lapid]['laptime'], False), ci[lapid]['player'], cb)
             line_chart.add(legend, zip(nsp, v))
             maxN = max(len(nsp), maxN)
+        if tracksame:
+            td = self.trackAndCarDetails()['tracks']
+            td = dict(map(lambda x: (x['acname'], x), td))
+            self.trackmap(track=track, curr_url=None)
+            if track in td and td[track]['mapdata']:
+                mapdata = pickle.loads(td[track]['mapdata'])
+                if 'sections' in mapdata:
+                    section_labels = []
+                    for section in mapdata['sections']:
+                        #midpoint = (section['infloat'] + section['outfloat']) / 2
+                        #midpoint *= length
+                        #section_labels.append(dict(label=section['text'], value=midpoint))
+                        section_labels.append(dict(label=section['text'] + " in", value=section['infloat'] * length))
+                        section_labels.append(dict(label=section['text'] + " out", value=section['outfloat'] * length))
+                    line_chart.x_labels = section_labels
         precision = max(1, min(10, int(1600/maxN)))
         line_chart.interpolation_precision = precision
         return line_chart.render()

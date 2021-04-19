@@ -823,7 +823,12 @@ class StrackerAdmin(StrackerPublic):
             for t in tracks:
                 td = tracks[t]
                 if 'mini' in td and 'mpng' in td:
-                    td['mapdata'] = pickle.dumps(dict(ini=td['mini'], png=td['mpng']))
+                    mapdata = dict(ini=td['mini'], png=td['mpng'])
+                    if 'sections' in td:
+                        mapdata['sections'] = td['sections']
+                    else:
+                        acwarning("no sections for %s", t)
+                    td['mapdata'] = pickle.dumps(mapdata)
                 td.update({'track':t})
                 trackres.append(td)
             carres = []
@@ -831,7 +836,7 @@ class StrackerAdmin(StrackerPublic):
                 cd = cars[c]
                 cd.update({'car':c})
                 carres.append(cd)
-            db.trackAndCarDetails(__sync=True,tracks=trackres,cars=carres)()
+            db.trackAndCarDetails(__sync=True,tracks=trackres,cars=carres,overwrite=True)()
             self.resetTrackAndCarDetails()
         except:
             acerror(traceback.format_exc())

@@ -191,7 +191,7 @@ class StrackerUDPPlugin:
         self.threadExc = None
         self.inDownTime = False
         self.acPlugin = ACServerPlugin(rcvPort, sendPort, callbackDecorator(self.callback), proxyPluginPort, proxyPluginLocalPort, log_err_ = self.log_warning, log_info_ = acinfo, log_dbg_ = self.log_debug)
-        self.rtReportMS = 200 # 5 Hz RT report
+        self.rtReportMS = 100 # 10 Hz RT report
         self.acPlugin.enableRealtimeReport(self.rtReportMS)
         self.lastRealtimeEventTimestamp = time.time() - 5.
         self.currentSession = None
@@ -290,7 +290,7 @@ class StrackerUDPPlugin:
         self.eventReceived = True
         if t - self.lastRealtimeEventTimestamp > 5. and len(self.cars) > 0:
             acdebug("Enabled realtime events")
-            self.acPlugin.enableRealtimeReport(self.rtReportMS) # 3 Hz realtime report request
+            self.acPlugin.enableRealtimeReport(self.rtReportMS)
             self.lastRealtimeEventTimestamp = t
         if type(event) in [NewSession, SessionInfo]:
             if event.currSessionIndex == event.sessionIndex:
@@ -482,8 +482,8 @@ class StrackerUDPPlugin:
                 if dSqr < 1.**2:
                     # min resolution is 1 meter
                     itemToBeIgnored = True
-                if entry.rcvTime - lastItem.rcvTime < 1.0:
-                    # min resolution is 1 second
+                if entry.rcvTime - lastItem.rcvTime < 0.2:
+                    # min resolution is 0.2 second
                     itemToBeIgnored = True
                 if entry.normalizedSplinePos < lastItem.normalizedSplinePos:
                     # we want the normalized spline pos to increase
